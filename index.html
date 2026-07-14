@@ -3,115 +3,125 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>GINZA TRAINING LAB — お客様サポート</title>
+<title>GINZA TRAINING LAB — Private Lounge</title>
 <style>
 :root{
-  --gold:#b39264; --gold-light:#d8c3a5; --gold-pale:#f6f0e7;
-  --ink:#2b2b2b; --ink-soft:#6b6257;
-  --bg:#faf8f5; --card:#ffffff; --line:#e8e1d6;
+  --gold:#b3905f; --gold-deep:#96784a; --gold-light:#d9c4a3; --gold-pale:#f5eee1;
+  --ink:#2a2521; --ink-soft:#7c7061;
+  --bg:#f4efe7; --card:#fffdf9; --line:#e8ddcb;
   --good:#7a9e7e; --warn:#c98a4b; --bad:#b95c50;
-  --radius:14px;
+  --radius:18px;
+  --shadow:0 3px 16px rgba(96,74,44,.08);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",-apple-system,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.7;padding-bottom:90px}
+body{font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",-apple-system,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.7;padding-bottom:92px}
 h1,h2,h3,.serif{font-family:"Hiragino Mincho ProN","Yu Mincho",serif}
 
 /* ===== header ===== */
-header{background:linear-gradient(160deg,#241f19,#3a322a);color:#fff;padding:22px 20px 18px;text-align:center;position:relative}
-header .brand{font-size:11px;letter-spacing:.35em;color:var(--gold-light)}
-header h1{font-size:20px;font-weight:600;letter-spacing:.12em;margin-top:4px}
-header .sub{font-size:11px;color:#bfb4a5;margin-top:2px;letter-spacing:.08em}
-header .logout{position:absolute;right:12px;top:12px;background:none;border:1px solid rgba(255,255,255,.25);color:#bfb4a5;border-radius:8px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit}
+header{background:linear-gradient(160deg,#221d17,#3b332a 70%,#4a3f31);color:#fff;padding:20px 20px 16px;text-align:center;position:relative}
+header .brand{font-size:10.5px;letter-spacing:.42em;color:var(--gold-light);margin-right:-.42em}
+header h1{font-family:"Didot","Bodoni 72","Hiragino Mincho ProN",serif;font-size:22px;font-weight:400;letter-spacing:.1em;margin-top:3px}
+header .sub{font-size:10px;color:#b7ab99;margin-top:3px;letter-spacing:.08em}
+header::after{content:"";display:block;margin:10px auto 0;width:56px;height:1px;background:linear-gradient(90deg,transparent,rgba(217,196,163,.7),transparent)}
+header .logout{position:absolute;right:12px;top:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.22);color:#c9bda9;border-radius:999px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:inherit}
 
 /* ===== customer bar ===== */
-.custbar{position:sticky;top:0;z-index:50;background:var(--card);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:10px;align-items:center;box-shadow:0 2px 10px rgba(0,0,0,.04)}
-.custbar select{flex:1;font-size:16px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--gold-pale);font-family:inherit;color:var(--ink)}
+.custbar{position:sticky;top:0;z-index:50;background:rgba(255,253,249,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:10px;align-items:center}
+.custbar select{flex:1;font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;font-family:inherit;color:var(--ink)}
 .custbar .me{flex:1;font-size:15px;padding:6px 2px;color:var(--ink)}
 .custbar button{white-space:nowrap}
 
-/* ===== tabs ===== */
-nav{position:fixed;bottom:0;left:0;right:0;z-index:60;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 16px rgba(0,0,0,.06)}
-nav button{flex:1;background:none;border:none;padding:10px 2px 8px;font-size:10.5px;color:var(--ink-soft);cursor:pointer;font-family:inherit;line-height:1.3}
-nav button .ic{display:block;font-size:20px;margin-bottom:2px;filter:grayscale(.6);opacity:.75}
-nav button.on{color:var(--gold)}
-nav button.on .ic{filter:none;opacity:1}
+/* ===== tabs(nav) ===== */
+nav{position:fixed;bottom:0;left:0;right:0;z-index:60;background:rgba(255,253,249,.95);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:none;border:none;padding:9px 2px 7px;font-size:10px;color:var(--ink-soft);cursor:pointer;font-family:inherit;line-height:1.3;position:relative}
+nav button .ic{display:block;font-size:21px;margin-bottom:1px;filter:grayscale(.75);opacity:.6;transition:all .15s}
+nav button.on{color:var(--gold-deep);font-weight:600}
+nav button.on .ic{filter:none;opacity:1;transform:translateY(-1px)}
+nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:26px;height:3px;border-radius:0 0 3px 3px;background:var(--gold)}
 main{max-width:640px;margin:0 auto;padding:18px 16px}
 section.tab{display:none}
-section.tab.on{display:block}
+section.tab.on{display:block;animation:fadein .25s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
 /* ===== cards & general ===== */
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.03)}
-.card h2{font-size:16px;color:var(--ink);margin-bottom:12px;display:flex;align-items:center;gap:8px;letter-spacing:.05em}
-.card h2::before{content:"";width:4px;height:18px;background:var(--gold);border-radius:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px 18px;margin-bottom:16px;box-shadow:var(--shadow)}
+.card h2{font-size:15.5px;color:var(--ink);margin-bottom:14px;display:flex;align-items:center;gap:9px;letter-spacing:.08em}
+.card h2::before{content:"";width:18px;height:1px;background:var(--gold);flex-shrink:0}
 .hint{font-size:12px;color:var(--ink-soft)}
-.btn{display:inline-block;background:var(--ink);color:#fff;border:none;border-radius:10px;padding:11px 20px;font-size:14px;cursor:pointer;font-family:inherit;letter-spacing:.05em}
-.btn.gold{background:linear-gradient(135deg,#c3a068,#a98a55);color:#fff}
-.btn.ghost{background:none;border:1px solid var(--line);color:var(--ink-soft);padding:8px 14px;font-size:13px}
-.btn.small{padding:7px 12px;font-size:12.5px}
-.btn.danger{background:none;border:1px solid #dcc0bc;color:var(--bad)}
+.btn{display:inline-block;background:var(--ink);color:#fff;border:none;border-radius:999px;padding:12px 22px;font-size:14px;cursor:pointer;font-family:inherit;letter-spacing:.06em}
+.btn.gold{background:linear-gradient(135deg,#c8a570,#a5854f);color:#fff;box-shadow:0 3px 10px rgba(165,133,79,.3)}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--ink-soft);padding:9px 16px;font-size:13px;box-shadow:none}
+.btn.small{padding:8px 14px;font-size:12.5px}
+.btn.danger{background:none;border:1px solid #dcc0bc;color:var(--bad);box-shadow:none}
 .btn:active{transform:scale(.97)}
 .btn[disabled]{opacity:.4;pointer-events:none}
-input[type=text],input[type=number],input[type=date],input[type=password],textarea,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;font-family:inherit;background:#fff;color:var(--ink)}
+input[type=text],input[type=number],input[type=date],input[type=password],textarea,select{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:12px;font-size:15px;font-family:inherit;background:#fff;color:var(--ink)}
 textarea{resize:vertical;min-height:70px}
-label.fl{display:block;font-size:12.5px;color:var(--ink-soft);margin:12px 0 5px;letter-spacing:.04em}
+label.fl{display:block;font-size:12.5px;color:var(--ink-soft);margin:13px 0 5px;letter-spacing:.04em}
 .row{display:flex;gap:10px}.row>*{flex:1}
-.empty{color:var(--ink-soft);font-size:13px;text-align:center;padding:26px 10px;background:var(--gold-pale);border-radius:10px}
+.empty{color:var(--ink-soft);font-size:13px;text-align:center;padding:26px 12px;background:var(--gold-pale);border-radius:12px}
 .trainer-only{display:none}
 body.trainer .trainer-only{display:block}
 body.trainer button.trainer-only,body.trainer .btn.trainer-only{display:inline-block}
 
 /* ===== chips ===== */
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
-.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 15px;font-size:13.5px;cursor:pointer;color:var(--ink-soft);font-family:inherit;transition:all .12s}
-.chip.on{background:var(--gold);border-color:var(--gold);color:#fff}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 15px;font-size:13.5px;cursor:pointer;color:var(--ink-soft);font-family:inherit;transition:all .12s}
+.chip.on{background:var(--gold);border-color:var(--gold);color:#fff;box-shadow:0 2px 8px rgba(179,144,95,.35)}
 .chip.mini{padding:5px 11px;font-size:12px}
 
 /* ===== score buttons (1-5) ===== */
 .score{display:flex;gap:8px;margin-top:6px}
-.score button{flex:1;aspect-ratio:1.15;border:1px solid var(--line);background:#fff;border-radius:12px;font-size:22px;cursor:pointer;opacity:.45;transition:all .15s}
-.score button.on{opacity:1;border-color:var(--gold);background:var(--gold-pale);transform:scale(1.06)}
+.score button{flex:1;aspect-ratio:1.15;border:1px solid var(--line);background:#fff;border-radius:14px;font-size:22px;cursor:pointer;opacity:.4;transition:all .15s}
+.score button.on{opacity:1;border-color:var(--gold);background:var(--gold-pale);transform:scale(1.07);box-shadow:0 3px 10px rgba(179,144,95,.25)}
 
 /* ===== segmented ===== */
-.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:6px}
-.seg button{flex:1;padding:9px 4px;border:none;background:#fff;font-size:13px;cursor:pointer;color:var(--ink-soft);font-family:inherit;border-right:1px solid var(--line)}
+.seg{display:flex;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:6px;background:#fff}
+.seg button{flex:1;padding:10px 4px;border:none;background:none;font-size:13px;cursor:pointer;color:var(--ink-soft);font-family:inherit;border-right:1px solid var(--line)}
 .seg button:last-child{border-right:none}
 .seg button.on{background:var(--ink);color:#fff}
 
 /* ===== record list ===== */
-.rec{border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:10px;background:#fff}
+.rec{border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:10px;background:#fff}
 .rec .top{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--ink-soft)}
 .rec .scores{display:flex;gap:14px;margin:6px 0 4px;font-size:13.5px}
 .rec .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
-.rec .tag{font-size:11px;background:var(--gold-pale);color:#8a744f;border-radius:6px;padding:2px 8px}
+.rec .tag{font-size:11px;background:var(--gold-pale);color:#8a744f;border-radius:7px;padding:2px 8px}
 .rec .memo{font-size:13px;color:var(--ink-soft);margin-top:5px;border-top:1px dashed var(--line);padding-top:5px}
 
 /* ===== ticket ===== */
-.ticket{background:linear-gradient(150deg,#2c2620,#4a4034);border-radius:18px;color:#fff;padding:24px 22px;margin-bottom:16px;position:relative;overflow:hidden}
-.ticket::after{content:"GINZA TRAINING LAB";position:absolute;right:-8px;bottom:6px;font-size:34px;font-weight:700;color:rgba(255,255,255,.05);letter-spacing:.05em;white-space:nowrap}
-.ticket .name{font-size:15px;letter-spacing:.1em;color:var(--gold-light)}
-.ticket .big{font-size:46px;font-family:"Hiragino Mincho ProN",serif;line-height:1.15;margin:4px 0}
-.ticket .big small{font-size:16px;color:#cfc4b2}
-.ticket .meta{font-size:12px;color:#bfb4a5;display:flex;gap:16px;position:relative;z-index:1}
-.dots{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 14px;position:relative;z-index:1}
-.dot{width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,.4)}
-.dot.used{background:var(--gold);border-color:var(--gold)}
+.ticket{background:linear-gradient(150deg,#26211b,#453b2e 75%,#57492f);border-radius:20px;color:#fff;padding:24px 22px 20px;margin-bottom:14px;position:relative;overflow:hidden;box-shadow:0 10px 26px rgba(50,38,18,.3)}
+.ticket::before{content:"";position:absolute;top:-40px;right:-40px;width:170px;height:170px;border-radius:50%;background:radial-gradient(circle,rgba(217,196,163,.16),transparent 70%)}
+.ticket::after{content:"GINZA TRAINING LAB";position:absolute;right:-6px;bottom:4px;font-size:32px;font-weight:700;color:rgba(255,255,255,.05);letter-spacing:.05em;white-space:nowrap}
+.ticket .name{font-size:14px;letter-spacing:.12em;color:var(--gold-light)}
+.ticket .big{font-size:48px;font-family:"Hiragino Mincho ProN",serif;line-height:1.15;margin:6px 0 2px}
+.ticket .big small{font-size:16px;color:#cfc4b2;margin-left:2px}
+.ticket .meta{font-size:12px;color:#b7ab99;display:flex;gap:14px;flex-wrap:wrap;position:relative;z-index:1}
+.month{margin-bottom:14px}
+.month .m-h{font-size:13.5px;color:var(--gold-deep);letter-spacing:.08em;font-weight:600;margin-bottom:7px;display:flex;align-items:baseline;gap:8px}
+.month .m-h span{font-size:11px;color:var(--ink-soft);font-weight:400}
+.month .m-days{display:flex;flex-wrap:wrap;gap:7px}
+.daychip{font-size:12.5px;background:var(--gold-pale);border:1px solid var(--line);color:#6d5b3f;border-radius:10px;padding:5px 11px}
+.skel{position:relative;overflow:hidden}
+.skel::before{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.09) 50%,transparent 70%);animation:shimmer 1.4s infinite}
+@keyframes shimmer{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
 
 /* ===== library ===== */
-.art{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:9px;background:#fff}
+.art{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:9px;background:#fff}
 .art .t{flex:1;min-width:0}
 .art .t a{color:var(--ink);text-decoration:none;font-size:14px;font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis}
 .art .t .cat{font-size:11px;color:var(--gold);letter-spacing:.05em}
 .badge{font-size:10.5px;background:var(--gold-pale);color:#8a744f;padding:3px 9px;border-radius:999px;white-space:nowrap}
 
 /* ===== advice ===== */
-.advice{background:var(--gold-pale);border-left:3px solid var(--gold);border-radius:0 12px 12px 0;padding:14px 16px;margin:12px 0;font-size:14px}
+.advice{background:var(--gold-pale);border-left:3px solid var(--gold);border-radius:0 14px 14px 0;padding:14px 16px;margin:12px 0;font-size:14px}
 .advice .h{font-weight:700;font-size:13px;color:#8a744f;margin-bottom:4px;letter-spacing:.06em}
-.vlink{display:inline-block;margin:6px 6px 0 0;font-size:12px;color:#8a744f;text-decoration:none;border:1px solid var(--gold-light);border-radius:999px;padding:4px 12px}
+.vlink{display:inline-block;margin:6px 6px 0 0;font-size:12px;color:#8a744f;text-decoration:none;border:1px solid var(--gold-light);border-radius:999px;padding:4px 12px;background:#fff}
 
 /* ===== modal ===== */
-.overlay{position:fixed;inset:0;background:rgba(30,25,18,.55);z-index:100;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px)}
+.overlay{position:fixed;inset:0;background:rgba(30,25,18,.55);z-index:100;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(3px)}
 .overlay.on{display:flex}
-.modal{background:var(--card);border-radius:22px 22px 0 0;width:100%;max-width:640px;max-height:86vh;overflow-y:auto;padding:24px 20px calc(24px + env(safe-area-inset-bottom));animation:up .25s ease}
+.modal{background:var(--card);border-radius:24px 24px 0 0;width:100%;max-width:640px;max-height:86vh;overflow-y:auto;padding:24px 20px calc(24px + env(safe-area-inset-bottom));animation:up .25s ease}
 @keyframes up{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
 .modal h3{font-size:17px;margin-bottom:10px;letter-spacing:.06em}
 .modal .close{float:right;background:none;border:none;font-size:22px;color:var(--ink-soft);cursor:pointer;margin:-6px -4px 0 0}
@@ -120,7 +130,7 @@ body.trainer button.trainer-only,body.trainer .btn.trainer-only{display:inline-b
 .medi{text-align:center}
 .medi .sym{font-size:44px;margin:6px 0 10px}
 .medi p{font-size:14px;color:var(--ink-soft);margin-bottom:16px}
-.medi a.video{display:block;background:var(--ink);color:#fff;border-radius:12px;padding:14px;text-decoration:none;font-size:15px;letter-spacing:.05em;margin-bottom:10px}
+.medi a.video{display:block;background:var(--ink);color:#fff;border-radius:14px;padding:14px;text-decoration:none;font-size:15px;letter-spacing:.05em;margin-bottom:10px}
 .medi a.video span{display:block;font-size:11px;color:#bfb4a5;margin-top:2px}
 
 .toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 22px;border-radius:999px;font-size:13.5px;z-index:200;opacity:0;pointer-events:none;transition:opacity .25s;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.25)}
@@ -128,87 +138,146 @@ body.trainer button.trainer-only,body.trainer .btn.trainer-only{display:inline-b
 
 /* philosophy page */
 .philo p{margin-bottom:12px;font-size:14.5px}
-.philo .flow{background:var(--gold-pale);border-radius:12px;padding:16px;text-align:center;font-size:13.5px;line-height:2.1;margin:14px 0;font-family:"Hiragino Mincho ProN",serif}
+.philo .flow{background:var(--gold-pale);border-radius:14px;padding:16px;text-align:center;font-size:13.5px;line-height:2.1;margin:14px 0;font-family:"Hiragino Mincho ProN",serif}
 .philo .flow b{color:#8a744f}
 .philo h3{font-size:15px;margin:18px 0 8px;color:#8a744f;letter-spacing:.06em}
-.draft{background:#fdf6ec;border:1px dashed var(--warn);border-radius:10px;padding:10px 14px;font-size:12px;color:#9a6b33;margin-bottom:14px}
+.draft{background:#fdf6ec;border:1px dashed var(--warn);border-radius:12px;padding:10px 14px;font-size:12px;color:#9a6b33;margin-bottom:14px}
 
-/* ===== TOP(ホーム) ===== */
-.home-hero{padding:0;overflow:hidden;border:none}
-.home-hero-inner{
-  padding:30px 22px 26px;color:#fff;text-align:center;
-  background:linear-gradient(150deg,#2c2620,#4a4034);
-  transition:background 1.2s ease;
-}
-body[data-tod="morning"] .home-hero-inner{background:linear-gradient(150deg,#5a4030,#c9906a)}
-body[data-tod="day"]     .home-hero-inner{background:linear-gradient(150deg,#8a744f,#d8c3a5)}
-body[data-tod="evening"] .home-hero-inner{background:linear-gradient(150deg,#4a2f26,#b3703f)}
-body[data-tod="night"]   .home-hero-inner{background:linear-gradient(150deg,#241f19,#3a322a)}
-.home-greet{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:20px;letter-spacing:.06em}
-.home-sub{font-size:12.5px;color:rgba(255,255,255,.75);margin-top:6px;letter-spacing:.05em}
-/* 家のビジュアル: 生成した部屋パースを背景に、時間帯で色調が変わる */
-.house{max-width:640px;margin:0 auto 16px;position:relative;border-radius:18px;overflow:hidden;
-  box-shadow:0 10px 30px rgba(60,45,20,.18)}
-.house-photo{display:block;width:100%;height:auto;aspect-ratio:1600/836;object-fit:cover;filter:saturate(1.02)}
-.house-tint{
-  position:absolute; inset:0; mix-blend-mode:multiply; opacity:.5; transition:background 1.2s ease,opacity 1.2s ease;
-  background:linear-gradient(160deg,#4a4034,#2c2620);
-}
-body[data-tod="morning"] .house-tint{background:linear-gradient(160deg,#c9906a,#8a5c3c);opacity:.28}
-body[data-tod="day"]     .house-tint{background:linear-gradient(160deg,#e8d9bc,#c9b183);opacity:.12}
-body[data-tod="evening"] .house-tint{background:linear-gradient(160deg,#b3703f,#5c3a26);opacity:.36}
-body[data-tod="night"]   .house-tint{background:linear-gradient(160deg,#241f19,#3a322a);opacity:.55}
-.house-tag{
-  position:absolute; z-index:3; transform:translate(-50%,-50%);
-  display:flex; align-items:center; gap:7px;
-  background:rgba(255,252,246,.86); backdrop-filter:blur(3px);
-  border:1px solid rgba(216,195,165,.7); border-radius:999px;
-  padding:7px 12px 7px 8px; cursor:pointer; font-family:inherit;
-  box-shadow:0 4px 14px rgba(40,28,14,.22); transition:transform .15s,box-shadow .15s;
-  white-space:nowrap;
-}
-.house-tag:active{transform:translate(-50%,-50%) scale(.95)}
-.house-tag .dot{width:8px;height:8px;border-radius:50%;background:var(--rc,var(--gold));flex-shrink:0;box-shadow:0 0 6px var(--rc,var(--gold))}
-.house-tag .tag-ic{font-size:15px;line-height:1}
-.house-tag .tag-txt{display:flex;flex-direction:column;line-height:1.15;text-align:left}
-.house-tag .tag-name{font-size:12px;font-weight:700;color:var(--ink);letter-spacing:.03em}
-.house-tag .tag-desc{font-size:9.5px;color:var(--ink-soft)}
-.house-caption{
-  position:absolute; left:10px; bottom:8px; z-index:3;
-  font-size:9px; letter-spacing:.24em; color:rgba(255,255,255,.75);
-  text-shadow:0 1px 3px rgba(0,0,0,.5);
+/* ===== TOP(ホーム): 本物の画像1枚 + %座標ラベル(バーチャルオフィス方式) ===== */
+.home-greet-card{background:linear-gradient(150deg,#241f19,#3f362b);border:none;color:#fff;text-align:center;padding:20px 18px;transition:background 1.2s ease}
+body[data-tod="morning"] .home-greet-card{background:linear-gradient(150deg,#54402e,#b98a60)}
+body[data-tod="day"]     .home-greet-card{background:linear-gradient(150deg,#7d6a49,#c9b183)}
+body[data-tod="evening"] .home-greet-card{background:linear-gradient(150deg,#46301f,#a8683c)}
+body[data-tod="night"]   .home-greet-card{background:linear-gradient(150deg,#221d17,#3b332a)}
+.home-greet{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:19px;letter-spacing:.08em}
+.home-sub{font-size:12px;color:rgba(255,255,255,.72);margin-top:5px;letter-spacing:.06em}
+
+.house{position:relative;border-radius:var(--radius);overflow:hidden;box-shadow:0 10px 28px rgba(70,52,26,.22);margin-bottom:16px;background:#b5a696}
+.house-photo{display:block;width:100%;height:auto;transition:filter 1.2s ease}
+body[data-tod="morning"] .house-photo{filter:brightness(1.03) saturate(1.02)}
+body[data-tod="day"]     .house-photo{filter:none}
+body[data-tod="evening"] .house-photo{filter:brightness(.96) saturate(1.18) sepia(.14)}
+body[data-tod="night"]   .house-photo{filter:brightness(.72) saturate(.82)}
+.house-shade{position:absolute;inset:0;pointer-events:none;transition:opacity 1.2s ease;opacity:0;background:linear-gradient(180deg,rgba(20,24,48,.28),rgba(20,24,48,.05))}
+body[data-tod="night"] .house-shade{opacity:1}
+body[data-tod="evening"] .house-shade{opacity:.35;background:linear-gradient(180deg,rgba(120,60,10,.16),rgba(120,60,10,.03))}
+
+/* 画像内の壁の英字を隠す銘板(%座標で壁に固定) */
+.plaque{position:absolute;left:57.3%;top:41.6%;width:9.9%;height:16.6%;z-index:2;
+  background:linear-gradient(160deg,#2e2822,#463b2d);border:1px solid rgba(217,196,163,.6);
+  border-radius:3px;box-shadow:inset 0 0 0 3px rgba(217,196,163,.16),0 2px 6px rgba(40,28,12,.35);
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  color:#d9c4a3;font-size:clamp(6px,1.65vw,10.5px);line-height:1.75;letter-spacing:.16em}
+
+/* 部屋ラベル */
+.room-tag{position:absolute;z-index:5;transform:translate(-50%,-50%);display:flex;align-items:center;gap:6px;
+  background:rgba(255,252,246,.92);backdrop-filter:blur(4px);border:1px solid rgba(216,195,165,.8);border-radius:999px;
+  padding:6px 11px 6px 8px;cursor:pointer;font-family:inherit;box-shadow:0 4px 12px rgba(40,28,14,.25);white-space:nowrap;transition:transform .15s}
+.room-tag:active{transform:translate(-50%,-50%) scale(.93)}
+.room-tag .rt-dot{width:7px;height:7px;border-radius:50%;background:var(--rc,var(--gold));flex-shrink:0;animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(179,144,95,.5)}50%{box-shadow:0 0 0 5px rgba(179,144,95,0)}}
+.room-tag .rt-ic{font-size:14px;line-height:1}
+.room-tag .rt-txt{display:flex;flex-direction:column;line-height:1.15;text-align:left}
+.room-tag .rt-name{font-size:11.5px;font-weight:700;color:var(--ink);letter-spacing:.03em}
+.room-tag .rt-desc{font-size:9px;color:var(--ink-soft)}
+/* 幅の狭い画面ではタグを小さくして画像を隠さない */
+@media (max-width:480px){
+  .room-tag{padding:4px 9px 4px 7px;gap:5px}
+  .room-tag .rt-desc{display:none}
+  .room-tag .rt-name{font-size:10.5px}
+  .room-tag .rt-ic{font-size:12px}
+  .room-tag .rt-dot{width:6px;height:6px}
 }
 
-/* ===== login screen ===== */
-#login{position:fixed;inset:0;z-index:90;background:linear-gradient(165deg,#241f19,#3a322a);display:flex;align-items:center;justify-content:center;padding:24px}
-#login .box{width:100%;max-width:380px;text-align:center}
-#login .brand{font-size:12px;letter-spacing:.4em;color:var(--gold-light)}
-#login h1{color:#fff;font-size:24px;letter-spacing:.14em;margin:8px 0 4px}
-#login .sub{font-size:12px;color:#bfb4a5;margin-bottom:30px;letter-spacing:.08em}
-#login input{text-align:center;font-size:17px;padding:14px;border-radius:12px;border:none;margin-bottom:14px;background:rgba(255,255,255,.95)}
+/* 徘徊アバター(装飾。タップの邪魔をしないようpointer-events:none) */
+.walker{position:absolute;z-index:4;height:16%;pointer-events:none;transform:translate(-50%,-100%)}
+.walker-inner{height:100%}
+.walker-inner img{height:100%;width:auto;display:block;filter:drop-shadow(0 4px 5px rgba(40,25,10,.3));transition:transform .3s}
+.walker.flip .walker-inner img{transform:scaleX(-1)}
+.walker.walking .walker-inner{animation:bob .55s ease-in-out infinite alternate}
+@keyframes bob{from{transform:translateY(0)}to{transform:translateY(-4px)}}
+.walker-bub{position:absolute;bottom:103%;left:50%;transform:translate(-50%,4px);background:rgba(255,253,248,.96);border:1px solid var(--line);color:var(--ink);font-size:11px;padding:5px 10px;border-radius:12px;white-space:nowrap;opacity:0;transition:opacity .3s,transform .3s;box-shadow:0 3px 10px rgba(40,28,14,.18)}
+.walker-bub.on{opacity:1;transform:translate(-50%,0)}
+.walker-bub::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:rgba(255,253,248,.96)}
+
+/* ===== login screen (Private Lounge の入口) =====
+   背景は assets/login-bg.jpg(静止画)と assets/login-bg.mp4(動画)のスロット方式。
+   ファイルが無ければ自動で外れてダークグラデーションのまま動く */
+#login{position:fixed;inset:0;z-index:90;background:linear-gradient(165deg,#1c1712,#332b21);display:flex;align-items:center;justify-content:center;padding:24px;overflow:hidden}
+.login-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:kenburns 26s ease-in-out infinite alternate}
+@keyframes kenburns{from{transform:scale(1)}to{transform:scale(1.08)}}
+.login-veil{position:absolute;inset:0;background:linear-gradient(175deg,rgba(18,14,10,.82),rgba(24,19,13,.5) 45%,rgba(14,11,8,.88))}
+#login .box{position:relative;width:100%;max-width:380px;text-align:center}
+#login .crest{width:88px;height:88px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;animation:crestIn 1.1s .1s cubic-bezier(.2,.8,.2,1) both}
+#login .crest img{width:100%;height:100%;object-fit:contain;mix-blend-mode:screen;filter:drop-shadow(0 0 14px rgba(217,196,163,.25))}
+/* 画像が無い場合のフォールバック(CSSダイヤ紋章) */
+#login .crest .crest-fallback{display:none;width:60px;height:60px;border:1px solid rgba(217,196,163,.55);transform:rotate(45deg);align-items:center;justify-content:center;box-shadow:inset 0 0 0 3px rgba(217,196,163,.12)}
+#login .crest .crest-fallback b{transform:rotate(-45deg);font-family:"Didot","Bodoni 72","Hiragino Mincho ProN",serif;font-weight:400;font-size:17px;color:var(--gold-light);letter-spacing:.14em;margin-right:-.14em}
+#login .crest img[hidden] + .crest-fallback{display:flex}
+@keyframes crestIn{from{opacity:0;transform:rotate(45deg) scale(.7)}to{opacity:1;transform:rotate(45deg) scale(1)}}
+#login .brand{font-size:11px;letter-spacing:.46em;color:var(--gold-light);margin-right:-.46em;animation:fadeUp .9s .35s both}
+#login h1{color:#fff;font-family:"Didot","Bodoni 72","Hiragino Mincho ProN",serif;font-weight:400;font-size:34px;letter-spacing:.08em;margin:10px 0 0}
+#login h1 .lt{display:inline-block;opacity:0;animation:ltIn .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(.45s + var(--i)*.05s)}
+@keyframes ltIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+#login .rule{height:1px;width:min(230px,68%);margin:14px auto 12px;background:linear-gradient(90deg,transparent,rgba(217,196,163,.85),transparent);transform:scaleX(0);animation:ruleIn 1s 1.05s cubic-bezier(.2,.8,.2,1) both}
+@keyframes ruleIn{to{transform:scaleX(1)}}
+#login .sub{font-size:11.5px;color:#cbbfa9;margin-bottom:24px;letter-spacing:.3em;margin-right:-.3em;animation:fadeUp .9s 1.2s both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+#login .pane{background:rgba(20,16,11,.45);border:1px solid rgba(217,196,163,.3);border-radius:22px;padding:20px 18px 16px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 18px 50px rgba(0,0,0,.4);animation:fadeUp .9s 1.3s both}
+#login .note{font-size:12px;color:#d8cdb9;margin-bottom:14px;letter-spacing:.06em}
+#login input{text-align:center;font-size:17px;padding:14px;border-radius:14px;border:1px solid rgba(217,196,163,.25);margin-bottom:14px;background:rgba(255,255,255,.93)}
 #login .btn{width:100%;padding:14px;font-size:15px}
-#login .err{color:#e8b0a8;font-size:13px;margin-top:14px;min-height:20px}
-#login .setup{margin-top:26px;background:rgba(255,255,255,.07);border:1px dashed rgba(216,195,165,.4);border-radius:12px;padding:14px;font-size:12px;color:#cfc4b2;text-align:left;line-height:1.8}
+#login .err{color:#e8b0a8;font-size:13px;margin-top:12px;min-height:20px}
+#login .setup{position:relative;margin-top:26px;background:rgba(255,255,255,.07);border:1px dashed rgba(216,195,165,.4);border-radius:14px;padding:14px;font-size:12px;color:#cfc4b2;text-align:left;line-height:1.8}
 .loading{opacity:.5;pointer-events:none}
+
+/* ===== 入場演出(TOP)と金箔 ===== */
+#tab-home.on .card,#tab-home.on .house{animation:rise .55s cubic-bezier(.2,.8,.2,1) backwards}
+#tab-home.on > *:nth-child(2){animation-delay:.08s}
+#tab-home.on > *:nth-child(3){animation-delay:.14s}
+#tab-home.on > *:nth-child(4){animation-delay:.2s}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+#tab-home.on .house-photo{animation:settle 1.8s .25s ease-out backwards}
+@keyframes settle{from{transform:scale(1.05)}}
+#tab-home.on .room-tag{animation:tagIn .5s cubic-bezier(.34,1.4,.4,1) backwards}
+#tab-home.on .room-tag:nth-of-type(1){animation-delay:.5s}
+#tab-home.on .room-tag:nth-of-type(2){animation-delay:.58s}
+#tab-home.on .room-tag:nth-of-type(3){animation-delay:.66s}
+#tab-home.on .room-tag:nth-of-type(4){animation-delay:.74s}
+#tab-home.on .room-tag:nth-of-type(5){animation-delay:.82s}
+@keyframes tagIn{from{opacity:0;transform:translate(-50%,-50%) scale(.55)}to{transform:translate(-50%,-50%) scale(1)}}
+.ticket .foil{position:absolute;inset:0;background:linear-gradient(115deg,transparent 32%,rgba(255,240,200,.12) 45%,rgba(255,255,255,.22) 50%,rgba(255,240,200,.12) 55%,transparent 68%);transform:translateX(-130%);animation:foil 2s .4s ease both;pointer-events:none}
+@keyframes foil{to{transform:translateX(130%)}}
 </style>
 </head>
 <body>
 
 <!-- ============ login ============ -->
 <div id="login">
+  <img class="login-media" src="assets/login-bg.jpg" alt="" onerror="this.remove()">
+  <video class="login-media" autoplay muted loop playsinline onerror="this.remove()">
+    <source src="assets/login-bg.mp4" type="video/mp4" onerror="this.closest('video').remove()">
+  </video>
+  <div class="login-veil"></div>
   <div class="box">
+    <div class="crest">
+      <img src="assets/crest.png" alt="" onerror="this.hidden=true">
+      <div class="crest-fallback"><b>GTL</b></div>
+    </div>
     <div class="brand">GINZA TRAINING LAB</div>
-    <h1>お客様サポート</h1>
-    <div id="loginForm">
-      <div class="sub">お名前と合言葉を入れてください</div>
+    <h1 id="loungeTitle">Private Lounge</h1>
+    <div class="rule"></div>
+    <div class="sub">会員さま専用ラウンジ</div>
+    <div id="loginForm" class="pane">
+      <div class="note">お名前と合言葉を入れてください</div>
       <input type="text" id="loginName" placeholder="お名前" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
       <input type="password" id="loginPass" placeholder="合言葉" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
       <button class="btn gold" id="loginBtn" onclick="doLogin()">ひらく</button>
       <div class="err" id="loginErr"></div>
       <button class="btn ghost" style="margin-top:6px;border-color:rgba(216,195,165,.4);color:#d8c3a5" onclick="showSignup(true)">はじめての方（新規登録）</button>
     </div>
-    <div id="signupForm" style="display:none">
-      <div class="sub">新規登録（カタカナのお名前とパスワード）</div>
+    <div id="signupForm" class="pane" style="display:none">
+      <div class="note">新規登録（カタカナのお名前とパスワード）</div>
       <input type="text" id="suName" placeholder="カタカナ氏名（例：ヤマダハナコ）" autocomplete="off">
       <label style="display:block;text-align:left;font-size:12px;color:#bfb4a5;margin:0 4px 4px">生年月日（アドバイスの個別化に使います）</label>
       <input type="date" id="suBirth" autocomplete="bday" style="margin-bottom:14px;padding:14px;border-radius:12px;border:none;background:rgba(255,255,255,.95);width:100%;font-size:16px;font-family:inherit">
@@ -229,8 +298,8 @@ body[data-tod="night"]   .house-tint{background:linear-gradient(160deg,#241f19,#
 
 <header style="display:none" id="hdr">
   <div class="brand">GINZA TRAINING LAB</div>
-  <h1>お客様サポート</h1>
-  <div class="sub">評価 × 知識 × 継続を、あなた専属で</div>
+  <h1>Private Lounge</h1>
+  <div class="sub">会員さま専用ラウンジ — 評価 × 知識 × 継続を、あなた専属で</div>
   <button class="logout" onclick="logout()">とじる</button>
 </header>
 
@@ -238,18 +307,16 @@ body[data-tod="night"]   .house-tint{background:linear-gradient(160deg,#241f19,#
   <span class="badge" id="roleBadge" style="flex-shrink:0"></span>
   <select id="custSel" onchange="selectCust(this.value)" style="display:none"></select>
   <div class="me" id="meName" style="display:none"></div>
-  <button class="btn small gold trainer-only" onclick="openModal('ovCust')">＋ お客様</button>
+  <button class="btn small gold trainer-only" onclick="openCustModal()">＋ お客様</button>
 </div>
 
 <main style="display:none" id="mainEl">
 
 <!-- ============ ⓪ TOP(ホーム) ============ -->
 <section class="tab on" id="tab-home">
-  <div class="card home-hero" id="homeHero">
-    <div class="home-hero-inner">
-      <div class="home-greet" id="homeGreet">こんにちは</div>
-      <div class="home-sub" id="homeSub"></div>
-    </div>
+  <div class="card home-greet-card">
+    <div class="home-greet" id="homeGreet">こんにちは</div>
+    <div class="home-sub" id="homeSub"></div>
   </div>
 
   <div class="card" id="homeResvCard" style="display:none">
@@ -263,29 +330,35 @@ body[data-tod="night"]   .house-tint{background:linear-gradient(160deg,#241f19,#
     <button class="btn small gold" onclick="setReservation()">予約を設定する</button>
   </div>
 
-  <div class="house">
-    <img class="house-photo" src="assets/home-hero.jpg" alt="">
-    <div class="house-tint"></div>
-    <div class="house-caption">GINZA TRAINING LAB — HOME</div>
-    <button class="house-tag" onclick="showTab('track')" style="--rc:#c98a4b;left:16%;top:56%">
-      <span class="dot"></span><span class="tag-ic">🏋️</span>
-      <span class="tag-txt"><span class="tag-name">ジム</span><span class="tag-desc">今日の記録</span></span>
+  <!-- 家: 本物の画像1枚を敷き、%座標でラベルとアバターを重ねる(バーチャルオフィス方式) -->
+  <div class="house" id="house">
+    <img class="house-photo" src="assets/house.jpg" alt="GINZA TRAINING LAB — HOME">
+    <div class="house-shade"></div>
+    <div class="plaque serif">GINZA<br>TRAINING<br>LAB</div>
+    <div class="walker" id="walker" style="left:42%;top:84%">
+      <div class="walker-bub" id="walkerBub"></div>
+      <div class="walker-inner"><img src="assets/avatar.png" alt=""></div>
+    </div>
+    <button class="room-tag" onclick="showTab('track')" style="--rc:#c98a4b;left:16%;top:44%">
+      <span class="rt-dot"></span><span class="rt-ic">🏋️</span>
+      <span class="rt-txt"><span class="rt-name">ジム</span><span class="rt-desc">今日の記録</span></span>
     </button>
-    <button class="house-tag" onclick="showTab('lib')" style="--rc:#4a90d9;left:52%;top:22%">
-      <span class="dot"></span><span class="tag-ic">📚</span>
-      <span class="tag-txt"><span class="tag-name">書斎</span><span class="tag-desc">知識</span></span>
+    <button class="room-tag" onclick="showTab('karte')" style="--rc:#7a9e7e;left:47%;top:70%">
+      <span class="rt-dot"></span><span class="rt-ic">🛋️</span>
+      <span class="rt-txt"><span class="rt-name">リビング</span><span class="rt-desc">記録をみる</span></span>
     </button>
-    <button class="house-tag" onclick="showTab('karte')" style="--rc:#7a9e7e;left:38%;top:70%">
-      <span class="dot"></span><span class="tag-ic">🛋️</span>
-      <span class="tag-txt"><span class="tag-name">リビング</span><span class="tag-desc">記録</span></span>
+    <button class="room-tag" onclick="showTab('ticket')" style="--rc:#b39264;left:50%;top:24%">
+      <span class="rt-dot"></span><span class="rt-ic">🎫</span>
+      <span class="rt-txt"><span class="rt-name">キッチン</span><span class="rt-desc">回数券</span></span>
     </button>
-    <button class="house-tag" onclick="showTab('ticket')" style="--rc:#b39264;left:80%;top:52%">
-      <span class="dot"></span><span class="tag-ic">🍽️</span>
-      <span class="tag-txt"><span class="tag-name">キッチン</span><span class="tag-desc">回数券</span></span>
+    <button class="room-tag" onclick="showTab('philo')" style="--rc:#8a7fb5;left:77%;top:15%">
+      <span class="rt-dot"></span><span class="rt-ic">🛏️</span>
+      <span class="rt-txt"><span class="rt-name">寝室</span><span class="rt-desc">考え方</span></span>
     </button>
-  </div>
-  <div style="text-align:center;margin-top:4px">
-    <button class="btn ghost small" onclick="showTab('philo')">💭 このジムの考え方を読む</button>
+    <button class="room-tag" onclick="showTab('lib')" style="--rc:#4a90d9;left:85%;top:52%">
+      <span class="rt-dot"></span><span class="rt-ic">📚</span>
+      <span class="rt-txt"><span class="rt-name">書斎</span><span class="rt-desc">知識</span></span>
+    </button>
   </div>
 </section>
 
@@ -521,11 +594,26 @@ body[data-tod="night"]   .house-tint{background:linear-gradient(160deg,#241f19,#
     <input type="text" id="mCustName" placeholder="例：伊藤さま">
     <label class="fl">このお客様専用の合言葉（ご本人がログインに使う）</label>
     <input type="text" id="mCustPass" placeholder="例：ito-2026">
-    <label class="fl">シート上のお名前（回数管理シートの名前列と完全一致・後から設定も可）</label>
-    <input type="text" id="mCustSheetName" placeholder="例：伊藤">
+    <label class="fl">回数管理シートとの紐付け（購入済みなら選ぶだけ）</label>
+    <select id="mCustSheetSel" onchange="onSheetSelChange('mCustSheetSel','mCustSheetName')"></select>
+    <input type="text" id="mCustSheetName" placeholder="シート上のお名前を入力（例：伊藤）" style="display:none;margin-top:8px">
+    <p class="hint" id="mCustSheetHint" style="margin-top:6px"></p>
     <label class="fl">メモ（目的・気になること など任意）</label>
     <textarea id="mCustNote" placeholder="例：脚やせ希望。デスクワーク。ヒール通勤。"></textarea>
     <div style="margin-top:16px"><button class="btn gold" style="width:100%" onclick="addCust()">登録する</button></div>
+  </div>
+</div>
+
+<!-- ============ sheet link modal (trainer) ============ -->
+<div class="overlay" id="ovSheet" onclick="if(event.target===this)closeModal('ovSheet')">
+  <div class="modal">
+    <button class="close" onclick="closeModal('ovSheet')">✕</button>
+    <h3>回数管理シートとの紐付け</h3>
+    <p class="hint" id="mSheetWho" style="margin-bottom:6px"></p>
+    <select id="mSheetSel" onchange="onSheetSelChange('mSheetSel','mSheetManual')"></select>
+    <input type="text" id="mSheetManual" placeholder="シート上のお名前を入力（例：伊藤）" style="display:none;margin-top:8px">
+    <p class="hint" id="mSheetHint" style="margin-top:6px"></p>
+    <div style="margin-top:16px"><button class="btn gold" style="width:100%" onclick="saveSheetName()">この内容で紐付ける</button></div>
   </div>
 </div>
 
@@ -717,6 +805,7 @@ function enterApp(){
     document.querySelectorAll('#segBy button').forEach(b=>b.classList.toggle('on', b.dataset.v==='お客様'));
     document.getElementById('sentTitle').textContent='あなたへのおすすめ記事';
   }
+  startWalker();
   render();
 }
 function logout(){
@@ -738,7 +827,7 @@ function openModal(id){ document.getElementById(id).classList.add('on'); }
 async function addCust(){
   const name = document.getElementById('mCustName').value.trim();
   const cpass = document.getElementById('mCustPass').value.trim();
-  const sheetName = document.getElementById('mCustSheetName').value.trim();
+  const sheetName = sheetSelValue('mCustSheetSel','mCustSheetName');
   const note = document.getElementById('mCustNote').value.trim();
   if(!name){ toast('お名前を入力してください'); return; }
   if(!cpass){ toast('お客様用の合言葉を入力してください'); return; }
@@ -1082,36 +1171,48 @@ async function renderTicket(){
   }
   if(!c.sheetName){
     body.innerHTML = isT
-      ? `<div class="card"><h2>回数管理シートと未連携</h2><p style="font-size:14px">このお客様はまだ回数管理シートと紐付いていません。「記録」タブ下部で「シート上のお名前」を設定してください。</p></div>`
+      ? `<div class="card"><h2>回数管理シートと未連携</h2><p style="font-size:14px;margin-bottom:12px">${esc(c.name)} はまだ回数管理シートと紐付いていません。購入済みであれば、シートの名前から選ぶだけで紐付きます。</p><button class="btn gold small" onclick="setSheetName()">シートの名前から選んで紐付ける</button></div>`
       : `<div class="empty">回数の表示準備中です。トレーナーにご確認ください。</div>`;
     return;
   }
-  body.innerHTML = `<div class="empty">回数管理シートを確認中…</div>`;
+  body.innerHTML = `<div class="ticket skel" style="height:132px"></div>`;
   let r;
   try{ r = await rpc('gtl_ticket_lookup', {...auth(), p_cid:c.id}); }catch(e){ r=null; }
+  /* 通信中に別のお客様へ切り替わっていたら描画しない */
+  if(!cur() || String(cur().id)!==String(c.id)) return;
   if(!r || r.error){
-    body.innerHTML = `<div class="empty">シートに接続できませんでした。電波の良い場所でもう一度お試しください。</div>`;
+    body.innerHTML = `<div class="empty">シートに接続できませんでした。電波の良い場所でもう一度お試しください。<div style="margin-top:10px"><button class="btn ghost small" onclick="renderTicket()">再読み込み</button></div></div>`;
     return;
   }
   if(!r.found){
-    body.innerHTML = `<div class="empty">シート上に「${esc(c.sheetName)}」の購入記録が見つかりません。トレーナーにご確認ください。</div>`;
+    body.innerHTML = `<div class="card"><h2>シートに見つかりません</h2><p style="font-size:14px">シート上に「${esc(c.sheetName)}」の購入記録が見つかりません。${isT?'':'トレーナーにご確認ください。'}</p>${isT?'<div style="margin-top:12px"><button class="btn gold small" onclick="setSheetName()">名前を選び直す</button></div>':''}</div>`;
     return;
   }
   const rest = Number(r.rest)||0;
   const dates = r.dates||[];
+  /* 利用日を月ごとにまとめる(新しい月から) */
+  const byMonth = {};
+  dates.forEach(d=>{ const k=d.slice(0,7); (byMonth[k]=byMonth[k]||[]).push(d); });
+  const wd=['日','月','火','水','木','金','土'];
+  const dayChip = d => { const dt=new Date(d+'T00:00:00'); return `<span class="daychip">${dt.getDate()}日（${wd[dt.getDay()]}）</span>`; };
+  const monthHtml = Object.keys(byMonth).sort().reverse().map(k=>{
+    const [y,m]=k.split('-'); const list=byMonth[k];
+    return `<div class="month"><div class="m-h">${Number(m)}月<span>${y}年・${list.length}回</span></div><div class="m-days">${list.map(dayChip).join('')}</div></div>`;
+  }).join('');
   body.innerHTML=`
     <div class="ticket">
+      <i class="foil"></i>
       <div class="name">${esc(c.name)}</div>
       <div class="big">残り ${rest}<small>回</small></div>
-      <div class="meta"><span>総利用回数：${r.totalUsed??'—'}回</span></div>
+      <div class="meta"><span>これまでのご利用 ${r.totalUsed??'—'}回</span>${isT?`<span>連携名「${esc(c.sheetName)}」</span>`:''}</div>
     </div>
-    <p class="hint" style="margin:-4px 0 14px">回数はGoogleシートで管理しています。「今日の記録」を保存すると自動で利用ログに記録されます。購入・追加はトレーナーがシート側で行います。</p>
+    <p class="hint" style="margin:0 2px 14px">回数はGoogleシートで管理しています。「今日の記録」を保存すると自動で利用が記録されます。購入・追加はトレーナーがシート側で行います。</p>
     <div class="card">
-      <h2>利用日</h2>
-      ${dates.length ? dates.map(d=>`<div class="rec" style="padding:10px 15px">${fmtDate(d)}</div>`).join('')
-        : '<div class="empty">まだ利用の記録がありません。</div>'}
+      <h2>ご利用の履歴</h2>
+      ${monthHtml || '<div class="empty">まだ利用の記録がありません。</div>'}
     </div>
-    ${rest<=1?`<div class="card"><p style="font-size:13.5px">残りわずかです。${isT?'次回シートで更新をお願いします。':'次回のセッションで更新のご相談を承ります。'}</p></div>`:''}
+    ${rest<=1?`<div class="card" style="border-color:var(--gold-light);background:var(--gold-pale)"><p style="font-size:13.5px">残りわずかです。${isT?'次回シートで更新をお願いします。':'次回のセッションで更新のご相談を承ります。'}</p></div>`:''}
+    ${isT?`<div style="text-align:right;margin-bottom:16px"><button class="btn ghost small" onclick="setSheetName()">連携名を変更</button> <button class="btn ghost small" onclick="renderTicket()">再読み込み</button></div>`:''}
   `;
 }
 function fmtDate(d){
@@ -1121,13 +1222,71 @@ function fmtDate(d){
 }
 async function setSheetName(){
   const c=cur(); if(!c) return;
-  const v = prompt(c.name+' さんの「シート上のお名前」を入力してください（回数管理シートの名前列と完全一致させてください）', c.sheetName||'');
-  if(v===null) return;
+  document.getElementById('mSheetWho').textContent = c.name+' さんを、回数管理シートのどの名前と紐付けますか？';
+  openModal('ovSheet');
+  prepareSheetSel('mSheetSel','mSheetManual','mSheetHint', c.sheetName||'');
+}
+async function saveSheetName(){
+  const c=cur(); if(!c) return;
+  const v = sheetSelValue('mSheetSel','mSheetManual');
   try{
-    const ok = await rpc('gtl_customer_sheetname',{...auth(), p_cid:c.id, p_sheetname:v.trim()});
+    const ok = await rpc('gtl_customer_sheetname',{...auth(), p_cid:c.id, p_sheetname:v});
     if(!ok){ toast('設定できませんでした'); return; }
-    await refresh(); toast('シート連携名を設定しました');
+    closeModal('ovSheet');
+    await refresh(); toast(v ? 'シートと紐付けました' : '紐付けを解除しました');
   }catch(e){ toast('通信エラー'); }
+}
+
+/* ---------- シート連携名の候補(回数管理シートから取得・トレーナー専用) ----------
+   gtl_sheet_names(patch_10) → GAS v6 action:'names' 経由。
+   取得できない環境(パッチ/再デプロイ前)では手動入力に自動フォールバックする。 */
+async function fetchSheetNames(force){
+  if(S.sheetNames && !force) return S.sheetNames;
+  try{
+    const r = await rpc('gtl_sheet_names', auth());
+    if(r && Array.isArray(r.names)){ S.sheetNames = r.names; return S.sheetNames; }
+  }catch(e){}
+  return null;
+}
+function linkedSheetNames(){
+  const map = {};
+  S.customers.forEach(c=>{ if(c.sheetName) map[c.sheetName] = c.name; });
+  return map;
+}
+function onSheetSelChange(selId, inputId){
+  const sel=document.getElementById(selId), input=document.getElementById(inputId);
+  input.style.display = sel.value==='__manual__' ? 'block' : 'none';
+}
+function sheetSelValue(selId, inputId){
+  const sel=document.getElementById(selId), input=document.getElementById(inputId);
+  if(sel.style.display==='none') return input.value.trim();   /* 一覧が取れず手入力のみの場合 */
+  return sel.value==='__manual__' ? input.value.trim() : sel.value;
+}
+async function prepareSheetSel(selId, inputId, hintId, current){
+  const sel=document.getElementById(selId), input=document.getElementById(inputId), hint=document.getElementById(hintId);
+  sel.style.display=''; sel.disabled=true; sel.innerHTML='<option>シートから名前を読み込み中…</option>';
+  input.style.display='none'; input.value=''; hint.textContent='';
+  const names = await fetchSheetNames();
+  if(names && names.length){
+    const linked = linkedSheetNames();
+    let html = '<option value="">（あとで設定する）</option>';
+    html += names.map(n=>`<option value="${esc(n)}">${esc(n)}${linked[n]?`　✓ ${esc(linked[n])}`:''}</option>`).join('');
+    html += '<option value="__manual__">リストにない名前（手動で入力）</option>';
+    sel.innerHTML = html; sel.disabled = false;
+    if(current){
+      if(names.includes(current)){ sel.value = current; }
+      else { sel.value = '__manual__'; input.value = current; }
+    }
+    onSheetSelChange(selId, inputId);
+    hint.textContent = '✓ が付いている名前は、すでに他のお客様と連携済みです';
+  } else {
+    sel.style.display='none'; input.style.display='block'; input.value = current||'';
+    hint.textContent = 'シートから一覧を取得できませんでした。手動でも入力できます（回数管理シートの名前列と完全一致）';
+  }
+}
+async function openCustModal(){
+  openModal('ovCust');
+  prepareSheetSel('mCustSheetSel','mCustSheetName','mCustSheetHint','');
 }
 
 /* ---------- render all ---------- */
@@ -1153,7 +1312,9 @@ function renderHome(){
   const c=cur(), isT=SESSION.role==='trainer';
   const tod=timeOfDay();
   const greet={morning:'おはようございます',day:'こんにちは',evening:'こんばんは',night:'こんばんは'}[tod];
-  document.getElementById('homeGreet').textContent = c ? `${greet}、${esc(c.name)}さま` : greet;
+  /* 名前に「さま/様/さん」が既に付いていたら二重に付けない */
+  const nm = c ? c.name.replace(/(さま|様|さん)$/,'') : '';
+  document.getElementById('homeGreet').textContent = c ? `${greet}、${nm}さま` : greet;
   document.getElementById('homeSub').textContent = isT ? '評価 × 知識 × 継続を、あなた専属で' : '今日も、できることから一緒に';
   const resvCard=document.getElementById('homeResvCard'), resvBody=document.getElementById('homeResvBody');
   const emptyCard=document.getElementById('homeResvEmptyCard');
@@ -1197,8 +1358,58 @@ function calcAge(birth){
   return (a>=0 && a<130) ? a : null;
 }
 
+/* ---------- TOPの徘徊アバター(装飾・データ非連動) ----------
+   家画像の中の通れる場所を%座標の地点リストで持ち、隣の地点へ歩いて移動する。
+   座標は画像内の床の位置(x%, y%=足元)。画像を差し替えたらここを調整する。 */
+const WALK_POINTS = [
+  {x:17,y:58},   /* ジムの床 */
+  {x:30,y:66},   /* ジム出口の廊下 */
+  {x:42,y:84},   /* リビングのラグ */
+  {x:49,y:60},   /* リビング奥 */
+  {x:56,y:40},   /* ダイニング */
+  {x:66,y:30},   /* 寝室の入口 */
+  {x:84,y:60}    /* 書斎 */
+];
+const WALK_LINES = ['ようこそ！','今日もいい一日に','お水は飲みましたか？','おつかれさまです','深呼吸をひとつどうぞ','姿勢、きれいです'];
+let walkerIdx = 2, walkerStarted = false;
+function startWalker(){
+  if(walkerStarted) return; walkerStarted = true;
+  const w = document.getElementById('walker'); if(!w) return;
+  const p = WALK_POINTS[walkerIdx];
+  w.style.left = p.x+'%'; w.style.top = p.y+'%';
+  setTimeout(walkerStep, 2200);
+}
+function walkerStep(){
+  const w = document.getElementById('walker'); if(!w) return;
+  let next = walkerIdx + (Math.random()<0.5 ? -1 : 1);
+  if(next<0 || next>=WALK_POINTS.length) next = walkerIdx + (walkerIdx===0 ? 1 : -1);
+  const from = WALK_POINTS[walkerIdx], to = WALK_POINTS[next];
+  const dur = Math.max(2.4, Math.hypot(to.x-from.x, (to.y-from.y)*.6) * .18);
+  w.classList.toggle('flip', to.x < from.x);
+  w.classList.add('walking');
+  w.style.transition = `left ${dur}s linear, top ${dur}s linear`;
+  w.style.left = to.x+'%'; w.style.top = to.y+'%';
+  walkerIdx = next;
+  setTimeout(()=>{
+    w.classList.remove('walking');
+    const bub = document.getElementById('walkerBub');
+    if(bub && Math.random() < 0.3){
+      bub.textContent = WALK_LINES[Math.floor(Math.random()*WALK_LINES.length)];
+      bub.classList.add('on');
+      setTimeout(()=>bub.classList.remove('on'), 2800);
+    }
+    setTimeout(walkerStep, 1800 + Math.random()*3800);
+  }, dur*1000);
+}
+
 /* ---------- boot: 保存済み合言葉で自動ログイン ---------- */
 (async function(){
+  /* ログインタイトルを1文字ずつ点灯させるための分割 */
+  const lt = document.getElementById('loungeTitle');
+  if(lt){
+    lt.innerHTML = lt.textContent.split('').map((ch,i)=>
+      `<span class="lt" style="--i:${i}">${ch===' '?'&nbsp;':ch}</span>`).join('');
+  }
   if(!configured()){ document.getElementById('setupNote').style.display='block'; return; }
   const savedName = recall('gtl_name'), savedPass = recall('gtl_pass');
   if(savedName && savedPass){
