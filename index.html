@@ -146,29 +146,21 @@ body[data-tod="evening"] .home-hero-inner{background:linear-gradient(150deg,#4a2
 body[data-tod="night"]   .home-hero-inner{background:linear-gradient(150deg,#241f19,#3a322a)}
 .home-greet{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:20px;letter-spacing:.06em}
 .home-sub{font-size:12.5px;color:rgba(255,255,255,.75);margin-top:6px;letter-spacing:.05em}
-/* 家のシルエット: 屋根+壁の中に部屋が並ぶ構造 */
-.house{max-width:420px;margin:0 auto 16px;position:relative}
-.roof{
-  width:0;height:0;margin:0 auto;
-  border-left:175px solid transparent;
-  border-right:175px solid transparent;
-  border-bottom:66px solid var(--roof-c,#4a3426);
-  filter:drop-shadow(0 3px 5px rgba(0,0,0,.18));
-  transition:border-bottom-color 1.2s ease;
+/* 家のビジュアル: 生成した部屋パースを背景に、時間帯で色調が変わる */
+.house{max-width:640px;margin:0 auto 16px;position:relative;border-radius:18px;overflow:hidden;
+  box-shadow:0 10px 30px rgba(60,45,20,.18)}
+.house-photo{display:block;width:100%;height:auto;aspect-ratio:1600/836;object-fit:cover;filter:saturate(1.02)}
+.house-tint{
+  position:absolute; inset:0; mix-blend-mode:multiply; opacity:.5; transition:background 1.2s ease,opacity 1.2s ease;
+  background:linear-gradient(160deg,#4a4034,#2c2620);
 }
-body[data-tod="morning"] .roof{--roof-c:#8a5c3c}
-body[data-tod="day"]     .roof{--roof-c:#9c8058}
-body[data-tod="evening"] .roof{--roof-c:#5c3a26}
-body[data-tod="night"]   .roof{--roof-c:#2c2620}
-.chimney{
-  position:absolute; top:-26px; right:74px; width:16px; height:30px;
-  background:var(--roof-c,#4a3426); border-radius:2px 2px 0 0; transition:background 1.2s ease;
-}
+body[data-tod="morning"] .house-tint{background:linear-gradient(160deg,#c9906a,#8a5c3c);opacity:.28}
+body[data-tod="day"]     .house-tint{background:linear-gradient(160deg,#e8d9bc,#c9b183);opacity:.12}
+body[data-tod="evening"] .house-tint{background:linear-gradient(160deg,#b3703f,#5c3a26);opacity:.36}
+body[data-tod="night"]   .house-tint{background:linear-gradient(160deg,#241f19,#3a322a);opacity:.55}
 .house-body{
-  background:linear-gradient(180deg,#fff,var(--gold-pale));
-  border:1px solid var(--line); border-top:none;
-  border-radius:0 0 18px 18px; padding:16px 14px 6px;
-  box-shadow:0 6px 22px rgba(60,45,20,.1);
+  position:relative; background:linear-gradient(180deg,#fff,var(--gold-pale));
+  padding:16px 14px 6px;
 }
 .house-label{text-align:center;font-size:10.5px;letter-spacing:.28em;color:var(--ink-soft);margin-bottom:12px}
 .rooms{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
@@ -275,8 +267,8 @@ body[data-tod="evening"] .room::before, body[data-tod="night"] .room::before{
   </div>
 
   <div class="house">
-    <div class="chimney"></div>
-    <div class="roof"></div>
+    <img class="house-photo" src="assets/home-hero.jpg" alt="">
+    <div class="house-tint"></div>
     <div class="house-body">
       <div class="house-label">GINZA TRAINING LAB — HOME</div>
       <div class="rooms">
