@@ -811,7 +811,12 @@ function enterApp(){
 function logout(){
   remember('gtl_name', null); remember('gtl_pass', null);
   SESSION={name:null,pass:null,role:null}; S={customers:[],articles:[],currentId:null};
-  location.reload();
+  /* reloadが効かない環境(アプリ内プレビュー等)でも確実に閉じられるよう、先にUIを直接戻す */
+  ['hdr','custbar','mainEl','navEl'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('login').style.display='flex';
+  document.getElementById('loginName').value=''; document.getElementById('loginPass').value='';
+  document.getElementById('loginErr').textContent='';
+  try{ location.reload(); }catch(e){}
 }
 
 /* ---------- tabs / modal ---------- */
