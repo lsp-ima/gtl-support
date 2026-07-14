@@ -146,17 +146,49 @@ body[data-tod="evening"] .home-hero-inner{background:linear-gradient(150deg,#4a2
 body[data-tod="night"]   .home-hero-inner{background:linear-gradient(150deg,#241f19,#3a322a)}
 .home-greet{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:20px;letter-spacing:.06em}
 .home-sub{font-size:12.5px;color:rgba(255,255,255,.75);margin-top:6px;letter-spacing:.05em}
-.rooms{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+/* 家のシルエット: 屋根+壁の中に部屋が並ぶ構造 */
+.house{max-width:420px;margin:0 auto 16px;position:relative}
+.roof{
+  width:0;height:0;margin:0 auto;
+  border-left:175px solid transparent;
+  border-right:175px solid transparent;
+  border-bottom:66px solid var(--roof-c,#4a3426);
+  filter:drop-shadow(0 3px 5px rgba(0,0,0,.18));
+  transition:border-bottom-color 1.2s ease;
+}
+body[data-tod="morning"] .roof{--roof-c:#8a5c3c}
+body[data-tod="day"]     .roof{--roof-c:#9c8058}
+body[data-tod="evening"] .roof{--roof-c:#5c3a26}
+body[data-tod="night"]   .roof{--roof-c:#2c2620}
+.chimney{
+  position:absolute; top:-26px; right:74px; width:16px; height:30px;
+  background:var(--roof-c,#4a3426); border-radius:2px 2px 0 0; transition:background 1.2s ease;
+}
+.house-body{
+  background:linear-gradient(180deg,#fff,var(--gold-pale));
+  border:1px solid var(--line); border-top:none;
+  border-radius:0 0 18px 18px; padding:16px 14px 6px;
+  box-shadow:0 6px 22px rgba(60,45,20,.1);
+}
+.house-label{text-align:center;font-size:10.5px;letter-spacing:.28em;color:var(--ink-soft);margin-bottom:12px}
+.rooms{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
 .room{
-  background:linear-gradient(160deg,#fff,var(--gold-pale));border:1px solid var(--line);border-radius:16px;
-  padding:20px 12px;text-align:center;cursor:pointer;font-family:inherit;
-  box-shadow:0 2px 10px rgba(0,0,0,.04);transition:transform .15s;
+  background:linear-gradient(160deg,#fff,var(--gold-pale));border:1px solid var(--line);border-radius:14px;
+  padding:18px 10px;text-align:center;cursor:pointer;font-family:inherit;position:relative;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.6);transition:transform .15s;
   border-top:3px solid var(--rc,var(--gold));
 }
+.room::before{
+  content:""; position:absolute; top:8px; right:8px; width:8px; height:8px; border-radius:50%;
+  background:var(--rc,var(--gold)); opacity:.35;
+}
+body[data-tod="evening"] .room::before, body[data-tod="night"] .room::before{
+  opacity:.9; box-shadow:0 0 6px var(--rc,var(--gold));
+}
 .room:active{transform:scale(.97)}
-.room-ic{display:block;font-size:30px;margin-bottom:8px}
-.room-name{display:block;font-size:14.5px;font-weight:700;color:var(--ink);letter-spacing:.04em}
-.room-desc{display:block;font-size:11px;color:var(--ink-soft);margin-top:3px}
+.room-ic{display:block;font-size:28px;margin-bottom:8px}
+.room-name{display:block;font-size:14px;font-weight:700;color:var(--ink);letter-spacing:.04em}
+.room-desc{display:block;font-size:10.5px;color:var(--ink-soft);margin-top:3px}
 
 /* ===== login screen ===== */
 #login{position:fixed;inset:0;z-index:90;background:linear-gradient(165deg,#241f19,#3a322a);display:flex;align-items:center;justify-content:center;padding:24px}
@@ -214,6 +246,7 @@ body[data-tod="night"]   .home-hero-inner{background:linear-gradient(150deg,#241
 </header>
 
 <div class="custbar" style="display:none" id="custbar">
+  <span class="badge" id="roleBadge" style="flex-shrink:0"></span>
   <select id="custSel" onchange="selectCust(this.value)" style="display:none"></select>
   <div class="me" id="meName" style="display:none"></div>
   <button class="btn small gold trainer-only" onclick="openModal('ovCust')">＋ お客様</button>
@@ -241,19 +274,26 @@ body[data-tod="night"]   .home-hero-inner{background:linear-gradient(150deg,#241
     <button class="btn small gold" onclick="setReservation()">予約を設定する</button>
   </div>
 
-  <div class="rooms">
-    <button class="room" onclick="showTab('track')" style="--rc:#c98a4b">
-      <span class="room-ic">🏋️</span><span class="room-name">今日の記録</span><span class="room-desc">ジム・トレーニングの記録</span>
-    </button>
-    <button class="room" onclick="showTab('karte')" style="--rc:#7a9e7e">
-      <span class="room-ic">🛋️</span><span class="room-name">記録</span><span class="room-desc">リビング・これまでの歩み</span>
-    </button>
-    <button class="room" onclick="showTab('lib')" style="--rc:#4a90d9">
-      <span class="room-ic">📚</span><span class="room-name">知識</span><span class="room-desc">書斎・学びのライブラリ</span>
-    </button>
-    <button class="room" onclick="showTab('ticket')" style="--rc:#b39264">
-      <span class="room-ic">🎫</span><span class="room-name">回数券</span><span class="room-desc">受付・残り回数の確認</span>
-    </button>
+  <div class="house">
+    <div class="chimney"></div>
+    <div class="roof"></div>
+    <div class="house-body">
+      <div class="house-label">GINZA TRAINING LAB — HOME</div>
+      <div class="rooms">
+        <button class="room" onclick="showTab('track')" style="--rc:#c98a4b">
+          <span class="room-ic">🏋️</span><span class="room-name">ジム</span><span class="room-desc">今日の記録</span>
+        </button>
+        <button class="room" onclick="showTab('karte')" style="--rc:#7a9e7e">
+          <span class="room-ic">🛋️</span><span class="room-name">リビング</span><span class="room-desc">記録</span>
+        </button>
+        <button class="room" onclick="showTab('lib')" style="--rc:#4a90d9">
+          <span class="room-ic">📚</span><span class="room-name">書斎</span><span class="room-desc">知識</span>
+        </button>
+        <button class="room" onclick="showTab('ticket')" style="--rc:#b39264">
+          <span class="room-ic">🍽️</span><span class="room-name">キッチン</span><span class="room-desc">回数券</span>
+        </button>
+      </div>
+    </div>
   </div>
   <div style="text-align:center;margin-top:4px">
     <button class="btn ghost small" onclick="showTab('philo')">💭 このジムの考え方を読む</button>
@@ -386,7 +426,7 @@ body[data-tod="night"]   .home-hero-inner{background:linear-gradient(150deg,#241
 <!-- ============ ② カルテ ============ -->
 <section class="tab" id="tab-karte">
   <div class="card">
-    <h2>これまでの歩み</h2>
+    <h2>記録</h2>
     <div id="noCust2" class="empty">お客様を選択してください</div>
     <div id="karteBody"></div>
   </div>
@@ -766,17 +806,19 @@ async function changeCustPass(){
 }
 function renderCustSel(){
   const sel=document.getElementById('custSel');
+  const roleBadge=document.getElementById('roleBadge');
+  if(roleBadge) roleBadge.textContent = SESSION.role==='trainer' ? 'トレーナー' : 'お客様';
   if(SESSION.role!=='trainer'){
     const c=cur();
-    document.getElementById('meName').innerHTML = c? `<b class="serif">${esc(c.name)}</b><span class="hint">　${c.corp?'法人契約':'残り'+(c.ticket.total-c.ticket.used)+'回'}</span>` : '';
+    document.getElementById('meName').innerHTML = c? `<b class="serif">${esc(c.name)}</b>${c.corp?'<span class="hint">　法人契約</span>':''}` : '';
     return;
   }
   if(!S.customers.length){ sel.innerHTML='<option value="">お客様が未登録です</option>'; return; }
+  /* 回数はGoogleシート側が正で一覧に都度取りに行けないため、ここには表示しない(誤表示防止) */
   sel.innerHTML = S.customers.map(c=>{
-    const rest = c.ticket.total - c.ticket.used;
     const mark = c.active===false ? '⏸ ' : '';
-    const info = c.corp ? '法人' : `残り${rest}回`;
-    return `<option value="${c.id}" ${String(c.id)===String(S.currentId)?'selected':''}>${mark}${esc(c.name)}（${info}${c.active===false?'・停止中':''}）</option>`;
+    const info = c.corp ? '（法人）' : '';
+    return `<option value="${c.id}" ${String(c.id)===String(S.currentId)?'selected':''}>${mark}${esc(c.name)}${info}${c.active===false?'（停止中）':''}</option>`;
   }).join('');
 }
 
@@ -1045,13 +1087,13 @@ async function renderTicket(){
   const isT = SESSION.role==='trainer';
   if(c.corp){
     body.innerHTML = isT
-      ? `<div class="card"><h2>法人契約</h2><p style="font-size:14px">${esc(c.name)} は法人契約のお客様です。回数券の管理はありません。<br><span class="hint">個人契約に戻す場合は「歩み」タブ下部の設定から。</span></p></div>`
+      ? `<div class="card"><h2>法人契約</h2><p style="font-size:14px">${esc(c.name)} は法人契約のお客様です。回数券の管理はありません。<br><span class="hint">個人契約に戻す場合は「記録」タブ下部の設定から。</span></p></div>`
       : '';
     return;
   }
   if(!c.sheetName){
     body.innerHTML = isT
-      ? `<div class="card"><h2>回数管理シートと未連携</h2><p style="font-size:14px">このお客様はまだ回数管理シートと紐付いていません。「歩み」タブ下部で「シート上のお名前」を設定してください。</p></div>`
+      ? `<div class="card"><h2>回数管理シートと未連携</h2><p style="font-size:14px">このお客様はまだ回数管理シートと紐付いていません。「記録」タブ下部で「シート上のお名前」を設定してください。</p></div>`
       : `<div class="empty">回数の表示準備中です。トレーナーにご確認ください。</div>`;
     return;
   }
@@ -1067,6 +1109,7 @@ async function renderTicket(){
     return;
   }
   const rest = Number(r.rest)||0;
+  const dates = r.dates||[];
   body.innerHTML=`
     <div class="ticket">
       <div class="name">${esc(c.name)}</div>
@@ -1074,8 +1117,18 @@ async function renderTicket(){
       <div class="meta"><span>総利用回数：${r.totalUsed??'—'}回</span></div>
     </div>
     <p class="hint" style="margin:-4px 0 14px">回数はGoogleシートで管理しています。「今日の記録」を保存すると自動で利用ログに記録されます。購入・追加はトレーナーがシート側で行います。</p>
+    <div class="card">
+      <h2>利用日</h2>
+      ${dates.length ? dates.map(d=>`<div class="rec" style="padding:10px 15px">${fmtDate(d)}</div>`).join('')
+        : '<div class="empty">まだ利用の記録がありません。</div>'}
+    </div>
     ${rest<=1?`<div class="card"><p style="font-size:13.5px">残りわずかです。${isT?'次回シートで更新をお願いします。':'次回のセッションで更新のご相談を承ります。'}</p></div>`:''}
   `;
+}
+function fmtDate(d){
+  const dt=new Date(d+'T00:00:00');
+  const w=['日','月','火','水','木','金','土'][dt.getDay()];
+  return d.replace(/-/g,'/')+`（${w}）`;
 }
 async function setSheetName(){
   const c=cur(); if(!c) return;
