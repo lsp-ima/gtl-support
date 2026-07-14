@@ -133,6 +133,31 @@ body.trainer button.trainer-only,body.trainer .btn.trainer-only{display:inline-b
 .philo h3{font-size:15px;margin:18px 0 8px;color:#8a744f;letter-spacing:.06em}
 .draft{background:#fdf6ec;border:1px dashed var(--warn);border-radius:10px;padding:10px 14px;font-size:12px;color:#9a6b33;margin-bottom:14px}
 
+/* ===== TOP(ホーム) ===== */
+.home-hero{padding:0;overflow:hidden;border:none}
+.home-hero-inner{
+  padding:30px 22px 26px;color:#fff;text-align:center;
+  background:linear-gradient(150deg,#2c2620,#4a4034);
+  transition:background 1.2s ease;
+}
+body[data-tod="morning"] .home-hero-inner{background:linear-gradient(150deg,#5a4030,#c9906a)}
+body[data-tod="day"]     .home-hero-inner{background:linear-gradient(150deg,#8a744f,#d8c3a5)}
+body[data-tod="evening"] .home-hero-inner{background:linear-gradient(150deg,#4a2f26,#b3703f)}
+body[data-tod="night"]   .home-hero-inner{background:linear-gradient(150deg,#241f19,#3a322a)}
+.home-greet{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:20px;letter-spacing:.06em}
+.home-sub{font-size:12.5px;color:rgba(255,255,255,.75);margin-top:6px;letter-spacing:.05em}
+.rooms{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.room{
+  background:linear-gradient(160deg,#fff,var(--gold-pale));border:1px solid var(--line);border-radius:16px;
+  padding:20px 12px;text-align:center;cursor:pointer;font-family:inherit;
+  box-shadow:0 2px 10px rgba(0,0,0,.04);transition:transform .15s;
+  border-top:3px solid var(--rc,var(--gold));
+}
+.room:active{transform:scale(.97)}
+.room-ic{display:block;font-size:30px;margin-bottom:8px}
+.room-name{display:block;font-size:14.5px;font-weight:700;color:var(--ink);letter-spacing:.04em}
+.room-desc{display:block;font-size:11px;color:var(--ink-soft);margin-top:3px}
+
 /* ===== login screen ===== */
 #login{position:fixed;inset:0;z-index:90;background:linear-gradient(165deg,#241f19,#3a322a);display:flex;align-items:center;justify-content:center;padding:24px}
 #login .box{width:100%;max-width:380px;text-align:center}
@@ -196,26 +221,59 @@ body.trainer button.trainer-only,body.trainer .btn.trainer-only{display:inline-b
 
 <main style="display:none" id="mainEl">
 
+<!-- ============ ⓪ TOP(ホーム) ============ -->
+<section class="tab on" id="tab-home">
+  <div class="card home-hero" id="homeHero">
+    <div class="home-hero-inner">
+      <div class="home-greet" id="homeGreet">こんにちは</div>
+      <div class="home-sub" id="homeSub"></div>
+    </div>
+  </div>
+
+  <div class="card" id="homeResvCard" style="display:none">
+    <h2>次回のご予約</h2>
+    <div id="homeResvBody" style="font-size:16px"></div>
+    <div class="trainer-only" style="margin-top:10px"><button class="btn small ghost" onclick="setReservation()">予約を設定・変更</button></div>
+  </div>
+  <div class="card trainer-only" id="homeResvEmptyCard" style="display:none">
+    <h2>次回のご予約</h2>
+    <p class="hint" style="margin-bottom:10px">まだ設定されていません</p>
+    <button class="btn small gold" onclick="setReservation()">予約を設定する</button>
+  </div>
+
+  <div class="rooms">
+    <button class="room" onclick="showTab('track')" style="--rc:#c98a4b">
+      <span class="room-ic">🏋️</span><span class="room-name">今日の記録</span><span class="room-desc">ジム・トレーニングの記録</span>
+    </button>
+    <button class="room" onclick="showTab('karte')" style="--rc:#7a9e7e">
+      <span class="room-ic">🛋️</span><span class="room-name">記録</span><span class="room-desc">リビング・これまでの歩み</span>
+    </button>
+    <button class="room" onclick="showTab('lib')" style="--rc:#4a90d9">
+      <span class="room-ic">📚</span><span class="room-name">知識</span><span class="room-desc">書斎・学びのライブラリ</span>
+    </button>
+    <button class="room" onclick="showTab('ticket')" style="--rc:#b39264">
+      <span class="room-ic">🎫</span><span class="room-name">回数券</span><span class="room-desc">受付・残り回数の確認</span>
+    </button>
+  </div>
+  <div style="text-align:center;margin-top:4px">
+    <button class="btn ghost small" onclick="showTab('philo')">💭 このジムの考え方を読む</button>
+  </div>
+</section>
+
 <!-- ============ ① 今日の記録 ============ -->
-<section class="tab on" id="tab-track">
+<section class="tab" id="tab-track">
   <div class="card celebration" id="celebrationCard" style="display:none;background:linear-gradient(135deg,#2c2620,#4a4034);color:#fff;text-align:center;border:none">
     <div id="celebrationText" class="serif" style="font-size:16px;letter-spacing:.06em"></div>
   </div>
   <div class="card">
-    <h2>今日の記録<span class="hint" style="font-weight:normal">（週2回・平日と週末）</span></h2>
+    <h2>今日の記録</h2>
     <div id="noCust1" class="empty">まず上の「＋ お客様」から登録してください</div>
     <div id="trackForm" style="display:none">
 
-      <label class="fl">記録するタイミング・記入者</label>
-      <div class="row">
-        <div class="seg" id="segSlot">
-          <button data-v="平日" class="on">平日</button>
-          <button data-v="週末">週末</button>
-        </div>
-        <div class="seg" id="segBy">
-          <button data-v="トレーナー" class="on">トレーナー</button>
-          <button data-v="お客様">ご本人</button>
-        </div>
+      <label class="fl">記入者</label>
+      <div class="seg" id="segBy">
+        <button data-v="トレーナー" class="on">トレーナー</button>
+        <button data-v="お客様">ご本人</button>
       </div>
 
       <div class="card" style="margin:16px -2px 4px;background:var(--gold-pale);border-color:var(--gold-light)">
@@ -261,19 +319,52 @@ body.trainer button.trainer-only,body.trainer .btn.trainer-only{display:inline-b
       <input type="text" id="inSize" placeholder="例：スカートのホックが留まった／ベルト1穴分">
 
       <label class="fl" style="font-size:13.5px;color:var(--ink);font-weight:600;margin-top:20px">食事のふりかえり（すべて感覚でOK）</label>
-      <label class="fl">満腹感</label>
-      <div class="seg" id="segFull"><button data-v="お腹いっぱい">お腹いっぱい</button><button data-v="ちょうど良い" class="on">ちょうど良い</button><button data-v="足りない">足りない</button></div>
-      <div class="row">
-        <div><label class="fl">野菜</label><div class="seg" id="segVege"><button data-v="多い">多い</button><button data-v="少ない">少ない</button></div></div>
-        <div><label class="fl">炭水化物</label><div class="seg" id="segCarb"><button data-v="多い">多い</button><button data-v="少ない">少ない</button></div></div>
+
+      <div class="card" style="margin:10px -2px;padding:14px 16px">
+        <label class="fl" style="margin-top:0;font-weight:600;color:#8a744f">🌅 朝食</label>
+        <label class="fl">満腹感</label>
+        <div class="seg" id="segFull_b"><button data-v="お腹いっぱい">お腹いっぱい</button><button data-v="ちょうど良い" class="on">ちょうど良い</button><button data-v="足りない">足りない</button></div>
+        <div class="row">
+          <div><label class="fl">野菜</label><div class="seg" id="segVege_b"><button data-v="多い">多い</button><button data-v="少ない">少ない</button></div></div>
+          <div><label class="fl">炭水化物</label><div class="seg" id="segCarb_b"><button data-v="多い">多い</button><button data-v="少ない">少ない</button></div></div>
+        </div>
+        <div class="row">
+          <div><label class="fl">タンパク質</label><div class="seg" id="segProt_b"><button data-v="多い">多い</button><button data-v="少ない">少ない</button></div></div>
+          <div><label class="fl">水分</label><div class="seg" id="segWater_b"><button data-v="多い">多い</button><button data-v="少ない">少ない</button></div></div>
+        </div>
       </div>
-      <div class="row">
-        <div><label class="fl">タンパク質</label><div class="seg" id="segProt"><button data-v="多い">多い</button><button data-v="少ない">少ない</button></div></div>
-        <div><label class="fl">水分</label><div class="seg" id="segWater"><button data-v="多い">多い</button><button data-v="少ない">少ない</button></div></div>
+
+      <div class="card" style="margin:10px -2px;padding:14px 16px">
+        <label class="fl" style="margin-top:0;font-weight:600;color:#8a744f">🌞 昼食</label>
+        <label class="fl">満腹感</label>
+        <div class="seg" id="segFull_l"><button data-v="お腹いっぱい">お腹いっぱい</button><button data-v="ちょうど良い" class="on">ちょうど良い</button><button data-v="足りない">足りない</button></div>
+        <div class="row">
+          <div><label class="fl">野菜</label><div class="seg" id="segVege_l"><button data-v="多い">多い</button><button data-v="少ない">少ない</button></div></div>
+          <div><label class="fl">炭水化物</label><div class="seg" id="segCarb_l"><button data-v="多い">多い</button><button data-v="少ない">少ない</button></div></div>
+        </div>
+        <div class="row">
+          <div><label class="fl">タンパク質</label><div class="seg" id="segProt_l"><button data-v="多い">多い</button><button data-v="少ない">少ない</button></div></div>
+          <div><label class="fl">水分</label><div class="seg" id="segWater_l"><button data-v="多い">多い</button><button data-v="少ない">少ない</button></div></div>
+        </div>
       </div>
+
+      <div class="card" style="margin:10px -2px;padding:14px 16px">
+        <label class="fl" style="margin-top:0;font-weight:600;color:#8a744f">🌙 夕食</label>
+        <label class="fl">満腹感</label>
+        <div class="seg" id="segFull_d"><button data-v="お腹いっぱい">お腹いっぱい</button><button data-v="ちょうど良い" class="on">ちょうど良い</button><button data-v="足りない">足りない</button></div>
+        <div class="row">
+          <div><label class="fl">野菜</label><div class="seg" id="segVege_d"><button data-v="多い">多い</button><button data-v="少ない">少ない</button></div></div>
+          <div><label class="fl">炭水化物</label><div class="seg" id="segCarb_d"><button data-v="多い">多い</button><button data-v="少ない">少ない</button></div></div>
+        </div>
+        <div class="row">
+          <div><label class="fl">タンパク質</label><div class="seg" id="segProt_d"><button data-v="多い">多い</button><button data-v="少ない">少ない</button></div></div>
+          <div><label class="fl">水分</label><div class="seg" id="segWater_d"><button data-v="多い">多い</button><button data-v="少ない">少ない</button></div></div>
+        </div>
+      </div>
+
       <div class="row">
-        <div><label class="fl">甘いもの</label><div class="seg" id="segSweet"><button data-v="たくさん食べた">たくさん</button><button data-v="食べなかった">控えめ</button></div></div>
-        <div><label class="fl">お酒</label><div class="seg" id="segAlc"><button data-v="たくさん飲んだ">たくさん</button><button data-v="適量">適量</button><button data-v="飲まない">なし</button></div></div>
+        <div><label class="fl">甘いもの（1日通して）</label><div class="seg" id="segSweet"><button data-v="たくさん食べた">たくさん</button><button data-v="食べなかった">控えめ</button></div></div>
+        <div><label class="fl">お酒（1日通して）</label><div class="seg" id="segAlc"><button data-v="たくさん飲んだ">たくさん</button><button data-v="適量">適量</button><button data-v="飲まない">なし</button></div></div>
       </div>
 
       <label class="fl">メモ（任意）</label>
@@ -384,7 +475,8 @@ body.trainer button.trainer-only,body.trainer .btn.trainer-only{display:inline-b
 
 <!-- ============ nav ============ -->
 <nav style="display:none" id="navEl">
-  <button class="on" data-tab="track" onclick="showTab('track')"><span class="ic">✍️</span>今日の記録</button>
+  <button class="on" data-tab="home" onclick="showTab('home')"><span class="ic">🏠</span>TOP</button>
+  <button data-tab="track" onclick="showTab('track')"><span class="ic">✍️</span>今日の記録</button>
   <button data-tab="karte" onclick="showTab('karte')"><span class="ic">📖</span>記録</button>
   <button data-tab="lib" onclick="showTab('lib')"><span class="ic">📚</span>知識</button>
   <button data-tab="ticket" onclick="showTab('ticket')"><span class="ic">🎫</span>回数券</button>
@@ -466,25 +558,31 @@ const MAGAZINES = [
 ];
 
 /* ---------- 食事アドバイス(事前作成パターン・ランタイム生成なし) ----------
-   文面はダイエット大学の動画16本ベースの素案(要校正)。videos: 根拠動画キー */
+   文面はダイエット大学の動画16本ベースの素案(要校正)。videos: 根拠動画キー
+   食事は朝(breakfast)/昼(lunch)/夕(dinner)の3食で記録。3食のうちいずれかが
+   該当すればアドバイスを出す(mealAny)。甘いもの/お酒は1日1回のみ記録。 */
+function mealAny(m, key, val){
+  return ['breakfast','lunch','dinner'].some(p => m[p] && m[p][key]===val);
+}
 const MEAL_ADVICE = [
-  {when:m=>m.vege==='少ない',   h:'野菜がすこし少なめ',       videos:['food_choice','meal_basic'],
+  {when:m=>mealAny(m,'vege','少ない'),   h:'野菜がすこし少なめ',       videos:['food_choice','meal_basic'],
    t:'次の食事で「野菜から先に」を1回やるだけでOK。何を選べばいいか迷ったら、参考動画の食品の選び方が近道です。'},
-  {when:m=>m.water==='少ない',  h:'水分が足りていないかも',   videos:['water_weight'],
+  {when:m=>mealAny(m,'water','少ない'),  h:'水分が足りていないかも',   videos:['water_weight'],
    t:'体重の日々の上下は水分の動きがほとんど。水を控えても脂肪は減りません。デスクにボトルを置いて、1時間にひと口を目安に。'},
-  {when:m=>m.prot==='少ない',   h:'タンパク質をあと少し',     videos:['amino','meal_basic'],
+  {when:m=>mealAny(m,'prot','少ない'),   h:'タンパク質をあと少し',     videos:['amino','meal_basic'],
    t:'肌や髪の材料もタンパク質です。卵1個・ヨーグルト1個・豆腐半丁のどれか1つを足すイメージで十分。詳しくはアミノ酸の動画をどうぞ。'},
-  {when:m=>m.carb==='少ない',   h:'糖質、ちゃんと摂りましょう', videos:['eat_carbs','no_lowcarb'],
+  {when:m=>mealAny(m,'carb','少ない'),   h:'糖質、ちゃんと摂りましょう', videos:['eat_carbs','no_lowcarb'],
    t:'当ラボは糖質制限をおすすめしていません。減らしすぎると睡眠と回復が落ちて、かえって痩せにくくなります。理由は参考動画で。'},
   {when:m=>m.sweet==='たくさん食べた', h:'甘いものを楽しんだ日', videos:['overeat','fruits'],
    t:'責める必要はまったくありません。「なぜ食べたくなるのか」の仕組みを知ると次がラクになります。甘いものが欲しい日は果物への置き換えも◎。'},
   {when:m=>m.alc==='たくさん飲んだ',  h:'お酒が多めだった日',   videos:['three_rules'],
    t:'アルコールの日は睡眠が浅くなりがち。今夜は水分を多めに、寝る前の一杯は白湯に。翌日は食事の3原則に静かに戻せば大丈夫です。'},
-  {when:m=>m.full==='足りない', h:'食べる量が足りていないかも', videos:['meal_mindset','overeat'],
+  {when:m=>mealAny(m,'full','足りない'), h:'食べる量が足りていないかも', videos:['meal_mindset','overeat'],
    t:'空腹をがまんし続けると、反動でドカ食いしやすくなります。がまんではなく「タンパク質を先に足す」が正解です。'},
-  {when:m=>m.full==='お腹いっぱい', h:'しっかり食べた日',      videos:['water_weight','overeat'],
+  {when:m=>mealAny(m,'full','お腹いっぱい'), h:'しっかり食べた日',      videos:['water_weight','overeat'],
    t:'食べすぎた翌日に抜くのはNG。翌朝の体重増はほぼ水分です。いつも通りの時間に、いつもの量へ戻すのが一番早いリカバリーです。'},
-  {when:m=>m.full==='ちょうど良い'&&m.vege==='多い', h:'理想的な食べ方です', videos:['three_rules'],
+  {when:m=>['breakfast','lunch','dinner'].some(p=>m[p]&&m[p].full==='ちょうど良い'&&m[p].vege==='多い'),
+   h:'理想的な食べ方です', videos:['three_rules'],
    t:'この食べ方が習慣になれば、体は必ずついてきます。この調子で。'},
 ];
 
@@ -688,7 +786,11 @@ function initSeg(id){
     b.onclick=()=>{ document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); };
   });
 }
-['segSlot','segBy','segIntensity','segFull','segVege','segCarb','segProt','segWater','segSweet','segAlc'].forEach(initSeg);
+['segBy','segIntensity',
+ 'segFull_b','segVege_b','segCarb_b','segProt_b','segWater_b',
+ 'segFull_l','segVege_l','segCarb_l','segProt_l','segWater_l',
+ 'segFull_d','segVege_d','segCarb_d','segProt_d','segWater_d',
+ 'segSweet','segAlc'].forEach(initSeg);
 function segVal(id){ const b=document.querySelector('#'+id+' button.on'); return b?b.dataset.v:null; }
 document.querySelectorAll('#segIntensity button').forEach(b=>{
   b.addEventListener('click', ()=>{
@@ -704,23 +806,27 @@ function initScore(id){
 function scoreVal(id){ const b=document.querySelector('#'+id+' button.on'); return b?parseInt(b.dataset.v,10):null; }
 document.querySelectorAll('#chChanges .chip').forEach(ch=> ch.onclick=()=>ch.classList.toggle('on'));
 
+function mealPeriod(suf){
+  return {full:segVal('segFull'+suf), vege:segVal('segVege'+suf), carb:segVal('segCarb'+suf),
+          prot:segVal('segProt'+suf), water:segVal('segWater'+suf)};
+}
 async function saveRecord(){
   const c=cur(); if(!c){ toast('お客様を選択してください'); return; }
   const intensity=segVal('segIntensity');
   const rec={
-    slot:segVal('segSlot'), by:segVal('segBy'),
+    by:segVal('segBy'),
     intensity, intensityNote: intensity==='その他' ? document.getElementById('inIntensityNote').value.trim() : '',
     happy:scoreVal('scHappy'), sleep:scoreVal('scSleep'), fatigue:scoreVal('scFatigue'),
     changes:[...document.querySelectorAll('#chChanges .chip.on')].map(b=>b.textContent),
     size:document.getElementById('inSize').value.trim(),
-    meal:{full:segVal('segFull'), vege:segVal('segVege'), carb:segVal('segCarb'),
-          prot:segVal('segProt'), water:segVal('segWater'), sweet:segVal('segSweet'), alc:segVal('segAlc')},
+    meal:{breakfast:mealPeriod('_b'), lunch:mealPeriod('_l'), dinner:mealPeriod('_d'),
+          sweet:segVal('segSweet'), alc:segVal('segAlc')},
     memo:document.getElementById('inMemo').value.trim()
   };
   const btn=document.getElementById('saveBtn'); btn.classList.add('loading'); btn.textContent='保存中…';
   try{
     const ok = await rpc('gtl_record_add', {
-      ...auth(), p_cid:c.id, p_slot:rec.slot, p_by:rec.by,
+      ...auth(), p_cid:c.id, p_slot:null, p_by:rec.by,
       p_happy:rec.happy, p_sleep:rec.sleep, p_fatigue:rec.fatigue,
       p_changes:rec.changes, p_size:rec.size, p_meal:rec.meal, p_memo:rec.memo,
       p_intensity:rec.intensity, p_intensity_note:rec.intensityNote
@@ -769,6 +875,12 @@ async function saveRecord(){
   document.querySelectorAll('.score button.on').forEach(b=>b.classList.remove('on'));
   document.querySelectorAll('#chChanges .chip.on').forEach(b=>b.classList.remove('on'));
   document.querySelectorAll('#segIntensity button.on').forEach(b=>b.classList.remove('on'));
+  ['_b','_l','_d'].forEach(suf=>{
+    document.querySelectorAll('#segFull'+suf+' button, #segVege'+suf+' button, #segCarb'+suf+' button, #segProt'+suf+' button, #segWater'+suf+' button')
+      .forEach(b=>b.classList.remove('on'));
+    document.querySelector('#segFull'+suf+' button[data-v="ちょうど良い"]').classList.add('on');
+  });
+  document.querySelectorAll('#segSweet button.on, #segAlc button.on').forEach(b=>b.classList.remove('on'));
   document.getElementById('inIntensityNote').style.display='none'; document.getElementById('inIntensityNote').value='';
   document.getElementById('inSize').value=''; document.getElementById('inMemo').value='';
   toast('記録しました');
@@ -825,7 +937,7 @@ function renderKarte(){
     const face=v=>v?['','😞','😕','😐','🙂','😊'][v]:'—';
     recs.innerHTML = rs.slice(0,30).map(r=>`
       <div class="rec">
-        <div class="top"><span>${r.date}（${esc(r.slot||'')}）</span><span>記入：${esc(r.by||'')}</span></div>
+        <div class="top"><span>${r.date}${r.slot?`（${esc(r.slot)}）`:''}</span><span>記入：${esc(r.by||'')}</span></div>
         <div class="scores">
           <span>きもち ${face(r.happy)}</span><span>睡眠 ${r.sleep??'—'}</span><span>体 ${r.fatigue??'—'}</span>
         </div>
@@ -839,15 +951,33 @@ function renderKarte(){
 }
 function mealSummary(m){
   if(!m) return '';
-  const parts=[];
-  if(m.full) parts.push('満腹感:'+m.full);
-  if(m.vege) parts.push('野菜'+m.vege);
-  if(m.prot) parts.push('タンパク質'+m.prot);
-  if(m.carb) parts.push('炭水化物'+m.carb);
-  if(m.water) parts.push('水分'+m.water);
-  if(m.sweet) parts.push('甘いもの:'+m.sweet);
-  if(m.alc) parts.push('お酒:'+m.alc);
-  return parts.length?`<div class="tags">${parts.map(p=>`<span class="tag" style="background:#f1ede6">${esc(p)}</span>`).join('')}</div>`:'';
+  /* 旧データ(3食化前)との後方互換: m.fullがあれば旧フラット構造として扱う */
+  if(m.full!==undefined || m.vege!==undefined){
+    const parts=[];
+    if(m.full) parts.push('満腹感:'+m.full);
+    if(m.vege) parts.push('野菜'+m.vege);
+    if(m.prot) parts.push('タンパク質'+m.prot);
+    if(m.carb) parts.push('炭水化物'+m.carb);
+    if(m.water) parts.push('水分'+m.water);
+    if(m.sweet) parts.push('甘いもの:'+m.sweet);
+    if(m.alc) parts.push('お酒:'+m.alc);
+    return parts.length?`<div class="tags">${parts.map(p=>`<span class="tag" style="background:#f1ede6">${esc(p)}</span>`).join('')}</div>`:'';
+  }
+  const labels={breakfast:'朝',lunch:'昼',dinner:'夕'};
+  const lines=[];
+  ['breakfast','lunch','dinner'].forEach(p=>{
+    const mm=m[p]; if(!mm) return;
+    const parts=[];
+    if(mm.full) parts.push('満腹感:'+mm.full);
+    if(mm.vege) parts.push('野菜'+mm.vege);
+    if(mm.prot) parts.push('タンパク質'+mm.prot);
+    if(mm.carb) parts.push('炭水化物'+mm.carb);
+    if(mm.water) parts.push('水分'+mm.water);
+    if(parts.length) lines.push(`<span class="tag" style="background:#f1ede6">${esc(labels[p])}: ${esc(parts.join('・'))}</span>`);
+  });
+  if(m.sweet) lines.push(`<span class="tag" style="background:#f1ede6">甘いもの:${esc(m.sweet)}</span>`);
+  if(m.alc) lines.push(`<span class="tag" style="background:#f1ede6">お酒:${esc(m.alc)}</span>`);
+  return lines.length?`<div class="tags">${lines.join('')}</div>`:'';
 }
 
 /* ---------- library ---------- */
@@ -966,7 +1096,43 @@ function render(){
   /* 法人のお客様(ご本人)には回数券タブ自体を出さない */
   const tbtn=document.querySelector('nav button[data-tab="ticket"]');
   if(tbtn) tbtn.style.display = (SESSION.role==='customer' && cur() && cur().corp) ? 'none' : '';
-  renderCustSel(); renderKarte(); renderLib(); renderTicket(); renderCelebration();
+  renderCustSel(); renderKarte(); renderLib(); renderTicket(); renderCelebration(); renderHome();
+}
+function timeOfDay(){
+  const h=new Date().getHours();
+  if(h>=5&&h<10) return 'morning';
+  if(h>=10&&h<16) return 'day';
+  if(h>=16&&h<19) return 'evening';
+  return 'night';
+}
+function applyTimeOfDay(){ document.body.setAttribute('data-tod', timeOfDay()); }
+applyTimeOfDay(); setInterval(applyTimeOfDay, 5*60000);
+function renderHome(){
+  const c=cur(), isT=SESSION.role==='trainer';
+  const tod=timeOfDay();
+  const greet={morning:'おはようございます',day:'こんにちは',evening:'こんばんは',night:'こんばんは'}[tod];
+  document.getElementById('homeGreet').textContent = c ? `${greet}、${esc(c.name)}さま` : greet;
+  document.getElementById('homeSub').textContent = isT ? '評価 × 知識 × 継続を、あなた専属で' : '今日も、できることから一緒に';
+  const resvCard=document.getElementById('homeResvCard'), resvBody=document.getElementById('homeResvBody');
+  const emptyCard=document.getElementById('homeResvEmptyCard');
+  if(c && c.nextReservation){
+    resvBody.textContent = c.nextReservation;
+    resvCard.style.display='block'; emptyCard.style.display='none';
+  } else if(isT && c){
+    resvCard.style.display='none'; emptyCard.style.display='block';
+  } else {
+    resvCard.style.display='none'; emptyCard.style.display='none';
+  }
+}
+async function setReservation(){
+  const c=cur(); if(!c) return;
+  const v=prompt(c.name+' さんの次回のご予約を入力してください（例：7/21(火) 19:00〜）', c.nextReservation||'');
+  if(v===null) return;
+  try{
+    const ok=await rpc('gtl_customer_reservation',{...auth(), p_cid:c.id, p_reservation:v.trim()});
+    if(!ok){ toast('設定できませんでした'); return; }
+    await refresh(); toast('予約を更新しました');
+  }catch(e){ toast('通信エラー'); }
 }
 function renderCelebration(){
   const card=document.getElementById('celebrationCard'), txt=document.getElementById('celebrationText');
