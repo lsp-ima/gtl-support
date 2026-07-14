@@ -198,6 +198,9 @@ body.trainer button.trainer-only,body.trainer .btn.trainer-only{display:inline-b
 
 <!-- ============ ① 今日の記録 ============ -->
 <section class="tab on" id="tab-track">
+  <div class="card celebration" id="celebrationCard" style="display:none;background:linear-gradient(135deg,#2c2620,#4a4034);color:#fff;text-align:center;border:none">
+    <div id="celebrationText" class="serif" style="font-size:16px;letter-spacing:.06em"></div>
+  </div>
   <div class="card">
     <h2>今日の記録<span class="hint" style="font-weight:normal">（週2回・平日と週末）</span></h2>
     <div id="noCust1" class="empty">まず上の「＋ お客様」から登録してください</div>
@@ -213,6 +216,17 @@ body.trainer button.trainer-only,body.trainer .btn.trainer-only{display:inline-b
           <button data-v="トレーナー" class="on">トレーナー</button>
           <button data-v="お客様">ご本人</button>
         </div>
+      </div>
+
+      <div class="card" style="margin:16px -2px 4px;background:var(--gold-pale);border-color:var(--gold-light)">
+        <label class="fl" style="margin-top:0;font-size:13.5px;color:var(--ink);font-weight:600">今日のトレーニング強度</label>
+        <div class="seg" id="segIntensity">
+          <button data-v="きつい">きつい</button>
+          <button data-v="まだまだ行ける">まだまだ行ける</button>
+          <button data-v="もう無理">もう無理</button>
+          <button data-v="その他">その他</button>
+        </div>
+        <input type="text" id="inIntensityNote" placeholder="コメントを入力" style="display:none;margin-top:10px">
       </div>
 
       <label class="fl">きもちの充実度（主観的幸福度）</label>
@@ -293,11 +307,13 @@ body.trainer button.trainer-only,body.trainer .btn.trainer-only{display:inline-b
     <h2>お客様の設定</h2>
     <div class="row" style="flex-wrap:wrap">
       <button class="btn ghost" onclick="changeCustPass()">合言葉を変更</button>
+      <button class="btn ghost" onclick="setSheetName()">シート連携名を設定</button>
       <button class="btn ghost" id="activeBtn" onclick="toggleActive()">利用停止にする</button>
       <button class="btn ghost" id="corpBtn" onclick="toggleCorp()">法人契約にする</button>
       <button class="btn danger" onclick="delCust()">このお客様を削除</button>
     </div>
     <p class="hint" id="activeHint" style="margin-top:10px"></p>
+    <p class="hint" id="sheetNameHint" style="margin-top:4px"></p>
   </div>
 </section>
 
@@ -369,7 +385,7 @@ body.trainer button.trainer-only,body.trainer .btn.trainer-only{display:inline-b
 <!-- ============ nav ============ -->
 <nav style="display:none" id="navEl">
   <button class="on" data-tab="track" onclick="showTab('track')"><span class="ic">✍️</span>今日の記録</button>
-  <button data-tab="karte" onclick="showTab('karte')"><span class="ic">📖</span>歩み</button>
+  <button data-tab="karte" onclick="showTab('karte')"><span class="ic">📖</span>記録</button>
   <button data-tab="lib" onclick="showTab('lib')"><span class="ic">📚</span>知識</button>
   <button data-tab="ticket" onclick="showTab('ticket')"><span class="ic">🎫</span>回数券</button>
   <button data-tab="philo" onclick="showTab('philo')"><span class="ic">💭</span>考え方</button>
@@ -384,23 +400,11 @@ body.trainer button.trainer-only,body.trainer .btn.trainer-only{display:inline-b
     <input type="text" id="mCustName" placeholder="例：伊藤さま">
     <label class="fl">このお客様専用の合言葉（ご本人がログインに使う）</label>
     <input type="text" id="mCustPass" placeholder="例：ito-2026">
-    <label class="fl">回数券（購入回数）</label>
-    <input type="number" id="mCustCount" placeholder="例：4" min="1">
+    <label class="fl">シート上のお名前（回数管理シートの名前列と完全一致・後から設定も可）</label>
+    <input type="text" id="mCustSheetName" placeholder="例：伊藤">
     <label class="fl">メモ（目的・気になること など任意）</label>
     <textarea id="mCustNote" placeholder="例：脚やせ希望。デスクワーク。ヒール通勤。"></textarea>
     <div style="margin-top:16px"><button class="btn gold" style="width:100%" onclick="addCust()">登録する</button></div>
-  </div>
-</div>
-
-<!-- ============ renewal modal (trainer) ============ -->
-<div class="overlay" id="ovRenew" onclick="if(event.target===this)closeModal('ovRenew')">
-  <div class="modal">
-    <button class="close" onclick="closeModal('ovRenew')">✕</button>
-    <h3>回数券の更新</h3>
-    <p class="hint" style="margin-bottom:8px">更新すると、これまでの利用履歴はクリアされ、新しい回数からのスタートになります。</p>
-    <label class="fl">新しい回数</label>
-    <input type="number" id="mRenewCount" placeholder="例：4" min="1">
-    <div style="margin-top:16px"><button class="btn gold" style="width:100%" onclick="renewTicket()">更新する（履歴クリア）</button></div>
   </div>
 </div>
 
@@ -457,6 +461,8 @@ const MEDITATION_IDS = [];
 const MAGAZINES = [
   {title:'下半身痩せマガジン(141本・無料)', url:'https://note.com/lifestylepro/m/m34fc02e73a61', desc:'脚やせ・下半身のお悩みはまずここから'},
   {title:'進化の話', url:'https://note.com/lifestylepro/m/mdf35defd7e85', desc:'「なぜこの種目?」の背景にある人類進化の話'},
+  {title:'寝る前にサラッと読めるシリーズ(81本)', url:'https://note.com/lifestylepro/m/m330bcb98d0ba', desc:'健康・ダイエット・トレーニングの話題を寝る前にひとテーマずつ'},
+  {title:'スポーツパフォーマンス(30本)', url:'https://note.com/lifestylepro/m/m1dbeea0d920a', desc:'パフォーマンスコーチとしての考え方・トレーニング理論'},
 ];
 
 /* ---------- 食事アドバイス(事前作成パターン・ランタイム生成なし) ----------
@@ -605,15 +611,15 @@ function openModal(id){ document.getElementById(id).classList.add('on'); }
 async function addCust(){
   const name = document.getElementById('mCustName').value.trim();
   const cpass = document.getElementById('mCustPass').value.trim();
-  const cnt  = parseInt(document.getElementById('mCustCount').value,10)||0;
+  const sheetName = document.getElementById('mCustSheetName').value.trim();
   const note = document.getElementById('mCustNote').value.trim();
   if(!name){ toast('お名前を入力してください'); return; }
   if(!cpass){ toast('お客様用の合言葉を入力してください'); return; }
   try{
-    const r = await rpc('gtl_customer_add', {...auth(), p_cname:name, p_note:note, p_cpass:cpass, p_total:cnt});
+    const r = await rpc('gtl_customer_add', {...auth(), p_cname:name, p_note:note, p_cpass:cpass, p_sheetname:sheetName||null});
     if(r==='dup'){ toast('同じお名前・同じ合言葉の組み合わせが既にあります'); return; }
     if(r!=='ok'){ toast('登録できませんでした'); return; }
-    ['mCustName','mCustPass','mCustCount','mCustNote'].forEach(id=>document.getElementById(id).value='');
+    ['mCustName','mCustPass','mCustSheetName','mCustNote'].forEach(id=>document.getElementById(id).value='');
     closeModal('ovCust');
     await refresh();
     const added = S.customers[S.customers.length-1];
@@ -682,8 +688,13 @@ function initSeg(id){
     b.onclick=()=>{ document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); };
   });
 }
-['segSlot','segBy','segFull','segVege','segCarb','segProt','segWater','segSweet','segAlc'].forEach(initSeg);
+['segSlot','segBy','segIntensity','segFull','segVege','segCarb','segProt','segWater','segSweet','segAlc'].forEach(initSeg);
 function segVal(id){ const b=document.querySelector('#'+id+' button.on'); return b?b.dataset.v:null; }
+document.querySelectorAll('#segIntensity button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.getElementById('inIntensityNote').style.display = (b.dataset.v==='その他') ? 'block' : 'none';
+  });
+});
 function initScore(id){
   document.querySelectorAll('#'+id+' button').forEach(b=>{
     b.onclick=()=>{ document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); };
@@ -695,8 +706,10 @@ document.querySelectorAll('#chChanges .chip').forEach(ch=> ch.onclick=()=>ch.cla
 
 async function saveRecord(){
   const c=cur(); if(!c){ toast('お客様を選択してください'); return; }
+  const intensity=segVal('segIntensity');
   const rec={
     slot:segVal('segSlot'), by:segVal('segBy'),
+    intensity, intensityNote: intensity==='その他' ? document.getElementById('inIntensityNote').value.trim() : '',
     happy:scoreVal('scHappy'), sleep:scoreVal('scSleep'), fatigue:scoreVal('scFatigue'),
     changes:[...document.querySelectorAll('#chChanges .chip.on')].map(b=>b.textContent),
     size:document.getElementById('inSize').value.trim(),
@@ -709,11 +722,15 @@ async function saveRecord(){
     const ok = await rpc('gtl_record_add', {
       ...auth(), p_cid:c.id, p_slot:rec.slot, p_by:rec.by,
       p_happy:rec.happy, p_sleep:rec.sleep, p_fatigue:rec.fatigue,
-      p_changes:rec.changes, p_size:rec.size, p_meal:rec.meal, p_memo:rec.memo
+      p_changes:rec.changes, p_size:rec.size, p_meal:rec.meal, p_memo:rec.memo,
+      p_intensity:rec.intensity, p_intensity_note:rec.intensityNote
     });
     if(!ok){ toast('保存できませんでした'); return; }
   }catch(e){ toast('通信エラー。電波の良い場所でもう一度どうぞ'); return; }
   finally{ btn.classList.remove('loading'); btn.textContent='記録する'; }
+
+  /* 回数管理シートに利用ログを追記(Supabase経由・失敗しても記録自体は成功扱い) */
+  if(c.sheetName){ rpc('gtl_ticket_log', {...auth(), p_cid:c.id}).catch(()=>{}); }
 
   /* 食事アドバイス(事前作成パターン、根拠動画リンク付き) */
   const hits = MEAL_ADVICE.filter(a=>{ try{return a.when(rec.meal);}catch(e){return false;} });
@@ -751,6 +768,8 @@ async function saveRecord(){
 
   document.querySelectorAll('.score button.on').forEach(b=>b.classList.remove('on'));
   document.querySelectorAll('#chChanges .chip.on').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('#segIntensity button.on').forEach(b=>b.classList.remove('on'));
+  document.getElementById('inIntensityNote').style.display='none'; document.getElementById('inIntensityNote').value='';
   document.getElementById('inSize').value=''; document.getElementById('inMemo').value='';
   toast('記録しました');
   await refresh();
@@ -798,6 +817,8 @@ function renderKarte(){
   }
   const cb=document.getElementById('corpBtn');
   if(cb) cb.textContent = c.corp ? '個人契約に戻す' : '法人契約にする(回数券非表示)';
+  const sh=document.getElementById('sheetNameHint');
+  if(sh) sh.textContent = c.sheetName ? `シート連携名: ${c.sheetName}` : '⚠️ シート連携名が未設定です（回数券が表示されません）';
 
   if(rs.length){
     recCard.style.display='block';
@@ -808,6 +829,7 @@ function renderKarte(){
         <div class="scores">
           <span>きもち ${face(r.happy)}</span><span>睡眠 ${r.sleep??'—'}</span><span>体 ${r.fatigue??'—'}</span>
         </div>
+        ${r.intensity?`<div class="tags"><span class="tag" style="background:#f1ede6">💪 ${esc(r.intensity)}${r.intensityNote?'：'+esc(r.intensityNote):''}</span></div>`:''}
         ${(r.changes&&r.changes.length)?`<div class="tags">${r.changes.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:''}
         ${r.size?`<div class="tags"><span class="tag">👗 ${esc(r.size)}</span></div>`:''}
         ${mealSummary(r.meal)}
@@ -883,8 +905,10 @@ async function sendArticle(title,url){
   }catch(e){ toast('通信エラー'); }
 }
 
-/* ---------- ticket ---------- */
-function renderTicket(){
+/* ---------- ticket ----------
+   回数管理シートへは直接アクセスしない(トークンをブラウザに出さないため)。
+   Supabase側のサーバー関数(gtl_ticket_lookup/gtl_ticket_log)経由でのみ問い合わせる。 */
+async function renderTicket(){
   const c=cur(), no=document.getElementById('noCust3'), body=document.getElementById('ticketBody');
   if(!c){ no.style.display='block'; body.innerHTML=''; return; }
   no.style.display='none';
@@ -895,44 +919,43 @@ function renderTicket(){
       : '';
     return;
   }
-  const t=c.ticket, rest=t.total-t.used;
-  const dots=Array.from({length:t.total},(_,i)=>`<div class="dot ${i<t.used?'used':''}"></div>`).join('');
+  if(!c.sheetName){
+    body.innerHTML = isT
+      ? `<div class="card"><h2>回数管理シートと未連携</h2><p style="font-size:14px">このお客様はまだ回数管理シートと紐付いていません。「歩み」タブ下部で「シート上のお名前」を設定してください。</p></div>`
+      : `<div class="empty">回数の表示準備中です。トレーナーにご確認ください。</div>`;
+    return;
+  }
+  body.innerHTML = `<div class="empty">回数管理シートを確認中…</div>`;
+  let r;
+  try{ r = await rpc('gtl_ticket_lookup', {...auth(), p_cid:c.id}); }catch(e){ r=null; }
+  if(!r || r.error){
+    body.innerHTML = `<div class="empty">シートに接続できませんでした。電波の良い場所でもう一度お試しください。</div>`;
+    return;
+  }
+  if(!r.found){
+    body.innerHTML = `<div class="empty">シート上に「${esc(c.sheetName)}」の購入記録が見つかりません。トレーナーにご確認ください。</div>`;
+    return;
+  }
+  const rest = Number(r.rest)||0;
   body.innerHTML=`
     <div class="ticket">
       <div class="name">${esc(c.name)}</div>
-      <div class="big">残り ${rest}<small> / ${t.total}回</small></div>
-      <div class="dots">${dots}</div>
-      <div class="meta"><span>開始日：${t.since||'—'}</span><span>利用済み：${t.used}回</span></div>
+      <div class="big">残り ${rest}<small>回</small></div>
+      <div class="meta"><span>総利用回数：${r.totalUsed??'—'}回</span></div>
     </div>
-    ${isT?`
-    <div class="card">
-      <h2>操作</h2>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn gold" onclick="useTicket()" ${rest<=0?'disabled':''}>本日1回利用</button>
-        <button class="btn ghost" onclick="undoTicket()" ${t.used<=0?'disabled':''}>1回戻す</button>
-        <button class="btn ghost" onclick="openModal('ovRenew')">🎫 回数券を更新（履歴クリア）</button>
-      </div>
-      ${rest<=1?`<p style="margin-top:12px;font-size:13px;color:var(--bad)">⚠️ 残りわずかです。次回セッションで更新のご案内をおすすめします。</p>`:''}
-    </div>`:`
-    ${rest<=1?`<div class="card"><p style="font-size:13.5px">残りわずかです。次回のセッションで更新のご相談を承ります。</p></div>`:''}`}
+    <p class="hint" style="margin:-4px 0 14px">回数はGoogleシートで管理しています。「今日の記録」を保存すると自動で利用ログに記録されます。購入・追加はトレーナーがシート側で行います。</p>
+    ${rest<=1?`<div class="card"><p style="font-size:13.5px">残りわずかです。${isT?'次回シートで更新をお願いします。':'次回のセッションで更新のご相談を承ります。'}</p></div>`:''}
   `;
 }
-async function ticketOp(action, total){
+async function setSheetName(){
   const c=cur(); if(!c) return;
+  const v = prompt(c.name+' さんの「シート上のお名前」を入力してください（回数管理シートの名前列と完全一致させてください）', c.sheetName||'');
+  if(v===null) return;
   try{
-    const ok = await rpc('gtl_ticket_op',{...auth(), p_cid:c.id, p_action:action, p_total:total??null});
-    if(!ok){ toast('操作できませんでした'); return; }
-    await refresh();
+    const ok = await rpc('gtl_customer_sheetname',{...auth(), p_cid:c.id, p_sheetname:v.trim()});
+    if(!ok){ toast('設定できませんでした'); return; }
+    await refresh(); toast('シート連携名を設定しました');
   }catch(e){ toast('通信エラー'); }
-}
-async function useTicket(){ await ticketOp('use'); const c=cur(); if(c) toast('1回利用を記録しました（残り'+(c.ticket.total-c.ticket.used)+'回）'); }
-async function undoTicket(){ await ticketOp('undo'); toast('1回戻しました'); }
-async function renewTicket(){
-  const n=parseInt(document.getElementById('mRenewCount').value,10);
-  if(!(n>0)){ toast('回数を入力してください'); return; }
-  closeModal('ovRenew'); document.getElementById('mRenewCount').value='';
-  await ticketOp('renew', n);
-  toast('更新しました。残り'+n+'回からスタートです');
 }
 
 /* ---------- render all ---------- */
@@ -943,7 +966,20 @@ function render(){
   /* 法人のお客様(ご本人)には回数券タブ自体を出さない */
   const tbtn=document.querySelector('nav button[data-tab="ticket"]');
   if(tbtn) tbtn.style.display = (SESSION.role==='customer' && cur() && cur().corp) ? 'none' : '';
-  renderCustSel(); renderKarte(); renderLib(); renderTicket();
+  renderCustSel(); renderKarte(); renderLib(); renderTicket(); renderCelebration();
+}
+function renderCelebration(){
+  const card=document.getElementById('celebrationCard'), txt=document.getElementById('celebrationText');
+  const c=cur();
+  const n=new Date(), m=n.getMonth()+1, d=n.getDate();
+  let msg=null;
+  if(c && c.birth){
+    const b=new Date(c.birth+'T00:00:00');
+    if(b.getMonth()+1===m && b.getDate()===d) msg=`🎂 ${esc(c.name)}さま、お誕生日おめでとうございます！`;
+  }
+  if(!msg && m===12 && d===25) msg='🎄 メリークリスマス！今日も素敵な1日を';
+  if(!msg && m===1 && d===1) msg='🎍 あけましておめでとうございます！今年もよろしくお願いいたします';
+  if(msg){ txt.textContent=msg; card.style.display='block'; } else { card.style.display='none'; }
 }
 function calcAge(birth){
   if(!birth) return null;
