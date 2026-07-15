@@ -924,7 +924,11 @@ document.querySelectorAll('#segIntensity button').forEach(b=>{
 });
 function initScore(id){
   document.querySelectorAll('#'+id+' button').forEach(b=>{
-    b.onclick=()=>{ document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); };
+    b.onclick=()=>{
+      const wasOn = b.classList.contains('on');
+      document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.remove('on'));
+      if(!wasOn) b.classList.add('on');
+    };
   });
 }
 ['scHappy','scSleep','scFatigue'].forEach(initScore);
@@ -1209,9 +1213,7 @@ async function renderTicket(){
       <i class="foil"></i>
       <div class="name">${esc(c.name)}</div>
       <div class="big">残り ${rest}<small>回</small></div>
-      <div class="meta"><span>これまでのご利用 ${r.totalUsed??'—'}回</span>${isT?`<span>連携名「${esc(c.sheetName)}」</span>`:''}</div>
     </div>
-    <p class="hint" style="margin:0 2px 14px">回数はGoogleシートで管理しています。「今日の記録」を保存すると自動で利用が記録されます。購入・追加はトレーナーがシート側で行います。</p>
     <div class="card">
       <h2>ご利用の履歴</h2>
       ${monthHtml || '<div class="empty">まだ利用の記録がありません。</div>'}
@@ -1299,9 +1301,9 @@ function render(){
   const has=!!cur();
   document.getElementById('noCust1').style.display=has?'none':'block';
   document.getElementById('trackForm').style.display=has?'block':'none';
-  /* 法人のお客様(ご本人)には回数券タブ自体を出さない */
+  /* 法人契約のお客様には回数券タブ自体を出さない(トレーナー画面でも) */
   const tbtn=document.querySelector('nav button[data-tab="ticket"]');
-  if(tbtn) tbtn.style.display = (SESSION.role==='customer' && cur() && cur().corp) ? 'none' : '';
+  if(tbtn) tbtn.style.display = (cur() && cur().corp) ? 'none' : '';
   renderCustSel(); renderKarte(); renderLib(); renderTicket(); renderCelebration(); renderHome();
 }
 function timeOfDay(){
