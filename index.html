@@ -113,6 +113,20 @@ body.trainer button.trainer-only,body.trainer .btn.trainer-only{display:inline-b
 .art .t .cat{font-size:11px;color:var(--gold);letter-spacing:.05em}
 .badge{font-size:10.5px;background:var(--gold-pale);color:#8a744f;padding:3px 9px;border-radius:999px;white-space:nowrap}
 
+/* ===== ai chat ===== */
+.chat-messages{max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:12px;padding-right:2px}
+.chat-msg{max-width:84%;padding:10px 14px;border-radius:16px;font-size:13.5px;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+.chat-msg.user{align-self:flex-end;background:var(--ink);color:#fff;border-bottom-right-radius:4px}
+.chat-msg.assistant{align-self:flex-start;background:var(--gold-pale);color:var(--ink);border-bottom-left-radius:4px}
+.chat-input-row{display:flex;gap:8px;align-items:flex-end}
+.chat-input-row textarea{flex:1;resize:none;min-height:44px}
+.chat-input-row .btn{flex-shrink:0}
+.chat-pair{display:flex;flex-direction:column;gap:6px}
+.chat-pair-actions{display:flex;gap:10px;align-self:flex-end;padding:0 4px}
+.chat-pair-actions button{background:none;border:none;padding:2px;font-size:15px;cursor:pointer;color:var(--ink-soft);line-height:1}
+.chat-pair-actions button.on{color:var(--gold)}
+.chat-pair-actions button:hover{color:var(--ink)}
+
 /* ===== advice ===== */
 .advice{background:var(--gold-pale);border-left:3px solid var(--gold);border-radius:0 14px 14px 0;padding:14px 16px;margin:12px 0;font-size:14px}
 .advice .h{font-weight:700;font-size:13px;color:#8a744f;margin-bottom:4px;letter-spacing:.06em}
@@ -371,9 +385,12 @@ body[data-tod="evening"] .house-shade{opacity:.35;background:linear-gradient(180
     <h2>今日の記録</h2>
     <div id="noCust1" class="empty">まず上の「＋ お客様」から登録してください</div>
     <div id="trackForm" style="display:none">
+      <div class="card" id="editBanner" style="display:none;background:var(--gold-pale);border-color:var(--gold-light);align-items:center;justify-content:space-between;padding:12px 16px;margin-bottom:14px">
+        <span id="editBannerDate" style="font-size:13px"></span>
+        <button class="btn ghost small" style="padding:5px 12px;font-size:12px" onclick="exitEditMode()">編集をやめる</button>
+      </div>
 
-      <label class="fl">記入者</label>
-      <div class="seg" id="segBy">
+      <div class="seg" id="segBy" style="display:none">
         <button data-v="トレーナー" class="on">トレーナー</button>
         <button data-v="お客様">ご本人</button>
       </div>
@@ -425,7 +442,7 @@ body[data-tod="evening"] .house-shade{opacity:.35;background:linear-gradient(180
       <div class="card" style="margin:10px -2px;padding:14px 16px">
         <label class="fl" style="margin-top:0;font-weight:600;color:#8a744f">🌅 朝食</label>
         <label class="fl">満腹感</label>
-        <div class="seg" id="segFull_b"><button data-v="お腹いっぱい">お腹いっぱい</button><button data-v="ちょうど良い" class="on">ちょうど良い</button><button data-v="足りない">足りない</button></div>
+        <div class="seg" id="segFull_b"><button data-v="お腹いっぱい">お腹いっぱい</button><button data-v="ちょうど良い">ちょうど良い</button><button data-v="足りない">足りない</button></div>
         <div class="row">
           <div><label class="fl">野菜</label><div class="seg" id="segVege_b"><button data-v="多い">多い</button><button data-v="少ない">少ない</button></div></div>
           <div><label class="fl">炭水化物</label><div class="seg" id="segCarb_b"><button data-v="多い">多い</button><button data-v="少ない">少ない</button></div></div>
@@ -439,7 +456,7 @@ body[data-tod="evening"] .house-shade{opacity:.35;background:linear-gradient(180
       <div class="card" style="margin:10px -2px;padding:14px 16px">
         <label class="fl" style="margin-top:0;font-weight:600;color:#8a744f">🌞 昼食</label>
         <label class="fl">満腹感</label>
-        <div class="seg" id="segFull_l"><button data-v="お腹いっぱい">お腹いっぱい</button><button data-v="ちょうど良い" class="on">ちょうど良い</button><button data-v="足りない">足りない</button></div>
+        <div class="seg" id="segFull_l"><button data-v="お腹いっぱい">お腹いっぱい</button><button data-v="ちょうど良い">ちょうど良い</button><button data-v="足りない">足りない</button></div>
         <div class="row">
           <div><label class="fl">野菜</label><div class="seg" id="segVege_l"><button data-v="多い">多い</button><button data-v="少ない">少ない</button></div></div>
           <div><label class="fl">炭水化物</label><div class="seg" id="segCarb_l"><button data-v="多い">多い</button><button data-v="少ない">少ない</button></div></div>
@@ -453,7 +470,7 @@ body[data-tod="evening"] .house-shade{opacity:.35;background:linear-gradient(180
       <div class="card" style="margin:10px -2px;padding:14px 16px">
         <label class="fl" style="margin-top:0;font-weight:600;color:#8a744f">🌙 夕食</label>
         <label class="fl">満腹感</label>
-        <div class="seg" id="segFull_d"><button data-v="お腹いっぱい">お腹いっぱい</button><button data-v="ちょうど良い" class="on">ちょうど良い</button><button data-v="足りない">足りない</button></div>
+        <div class="seg" id="segFull_d"><button data-v="お腹いっぱい">お腹いっぱい</button><button data-v="ちょうど良い">ちょうど良い</button><button data-v="足りない">足りない</button></div>
         <div class="row">
           <div><label class="fl">野菜</label><div class="seg" id="segVege_d"><button data-v="多い">多い</button><button data-v="少ない">少ない</button></div></div>
           <div><label class="fl">炭水化物</label><div class="seg" id="segCarb_d"><button data-v="多い">多い</button><button data-v="少ない">少ない</button></div></div>
@@ -494,6 +511,10 @@ body[data-tod="evening"] .house-shade{opacity:.35;background:linear-gradient(180
   </div>
   <div class="card" id="karteRecsCard" style="display:none">
     <h2>記録の履歴</h2>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+      <input type="date" id="karteDatePick" onchange="renderKarteRecs()" style="flex:1">
+      <button class="btn ghost small" style="padding:9px 14px;font-size:12.5px" onclick="document.getElementById('karteDatePick').value='';renderKarteRecs()">クリア</button>
+    </div>
     <div id="karteRecs"></div>
   </div>
   <div class="card trainer-only">
@@ -512,6 +533,19 @@ body[data-tod="evening"] .house-shade{opacity:.35;background:linear-gradient(180
 
 <!-- ============ ③ 知識ライブラリ ============ -->
 <section class="tab" id="tab-lib">
+  <div class="card" id="savedChatCard" style="display:none">
+    <h2>保存した質問</h2>
+    <div id="savedChatList"></div>
+  </div>
+  <div class="card">
+    <h2>AIアシスタントに聞く</h2>
+    <p class="hint" style="margin-bottom:10px">今村の知識をもとにお答えします。いまはまだ学習中のため、お答えできない質問もあります。</p>
+    <div id="chatMessages" class="chat-messages"></div>
+    <div class="chat-input-row">
+      <textarea id="chatInput" rows="2" placeholder="気になることを聞いてみてください" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}"></textarea>
+      <button class="btn gold small" id="chatSendBtn" onclick="sendChatMessage()">送信</button>
+    </div>
+  </div>
   <div class="card">
     <h2>マガジン（note）</h2>
     <p class="hint" style="margin-bottom:10px">記事の本文はnoteでお読みいただきます。</p>
@@ -614,21 +648,6 @@ body[data-tod="evening"] .house-shade{opacity:.35;background:linear-gradient(180
     <input type="text" id="mSheetManual" placeholder="シート上のお名前を入力（例：伊藤）" style="display:none;margin-top:8px">
     <p class="hint" id="mSheetHint" style="margin-top:6px"></p>
     <div style="margin-top:16px"><button class="btn gold" style="width:100%" onclick="saveSheetName()">この内容で紐付ける</button></div>
-  </div>
-</div>
-
-<!-- ============ reservation modal (trainer) ============ -->
-<div class="overlay" id="ovResv" onclick="if(event.target===this)closeModal('ovResv')">
-  <div class="modal">
-    <button class="close" onclick="closeModal('ovResv')">✕</button>
-    <h3>次回のご予約</h3>
-    <p class="hint" id="mResvWho" style="margin-bottom:6px"></p>
-    <label class="fl">日付</label>
-    <input type="date" id="mResvDate">
-    <label class="fl">時刻（任意）</label>
-    <input type="time" id="mResvTime">
-    <div style="margin-top:16px"><button class="btn gold" style="width:100%" onclick="saveReservation()">この内容で設定する</button></div>
-    <div style="margin-top:8px" id="mResvClearWrap"><button class="btn ghost" style="width:100%" onclick="clearReservation()">予約を削除する</button></div>
   </div>
 </div>
 
@@ -931,6 +950,16 @@ function initSeg(id){
  'segFull_l','segVege_l','segCarb_l','segProt_l','segWater_l',
  'segFull_d','segVege_d','segCarb_d','segProt_d','segWater_d',
  'segSweet','segAlc'].forEach(initSeg);
+/* 食事系・強度セグメントはダブルクリックで選択解除できるようにする */
+['segIntensity',
+ 'segFull_b','segVege_b','segCarb_b','segProt_b','segWater_b',
+ 'segFull_l','segVege_l','segCarb_l','segProt_l','segWater_l',
+ 'segFull_d','segVege_d','segCarb_d','segProt_d','segWater_d',
+ 'segSweet','segAlc'].forEach(id=>{
+  document.querySelectorAll('#'+id+' button').forEach(b=>{
+    b.addEventListener('dblclick', ()=>{ b.classList.remove('on'); });
+  });
+});
 function segVal(id){ const b=document.querySelector('#'+id+' button.on'); return b?b.dataset.v:null; }
 document.querySelectorAll('#segIntensity button').forEach(b=>{
   b.addEventListener('click', ()=>{
@@ -954,8 +983,66 @@ function mealPeriod(suf){
   return {full:segVal('segFull'+suf), vege:segVal('segVege'+suf), carb:segVal('segCarb'+suf),
           prot:segVal('segProt'+suf), water:segVal('segWater'+suf)};
 }
+let EDITING_RECORD_ID = null;
+let ADDING_FOR_DATE = null;
+function resetTrackForm(){
+  document.querySelectorAll('#trackForm .seg button').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('#trackForm .score button').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('#chChanges .chip').forEach(ch=>ch.classList.remove('on'));
+  document.getElementById('inIntensityNote').value=''; document.getElementById('inIntensityNote').style.display='none';
+  document.getElementById('inSize').value=''; document.getElementById('inMemo').value='';
+}
+function addRecordForDate(date){
+  resetTrackForm();
+  EDITING_RECORD_ID = null;
+  ADDING_FOR_DATE = date;
+  document.getElementById('saveBtn').textContent = '記録する';
+  document.getElementById('editBanner').style.display = 'flex';
+  document.getElementById('editBannerDate').textContent = date + ' の記録を新規追加中';
+  showTab('track');
+}
+function setSeg(id, val){
+  document.querySelectorAll('#'+id+' button').forEach(b=>b.classList.toggle('on', val!=null && b.dataset.v===val));
+}
+function setScore(id, val){
+  document.querySelectorAll('#'+id+' button').forEach(b=>b.classList.toggle('on', val!=null && parseInt(b.dataset.v,10)===val));
+}
+function editRecord(id){
+  const c=cur(); if(!c) return;
+  const r=(c.records||[]).find(x=>String(x.id)===String(id));
+  if(!r){ toast('記録が見つかりませんでした'); return; }
+  EDITING_RECORD_ID = id;
+  ADDING_FOR_DATE = null;
+  setSeg('segIntensity', r.intensity);
+  document.getElementById('inIntensityNote').value = r.intensityNote || '';
+  document.getElementById('inIntensityNote').style.display = r.intensity==='その他' ? 'block' : 'none';
+  setScore('scHappy', r.happy); setScore('scSleep', r.sleep); setScore('scFatigue', r.fatigue);
+  const changes = r.changes || [];
+  document.querySelectorAll('#chChanges .chip').forEach(ch=>ch.classList.toggle('on', changes.includes(ch.textContent)));
+  document.getElementById('inSize').value = r.size || '';
+  document.getElementById('inMemo').value = r.memo || '';
+  const m = r.meal || {};
+  [['_b','breakfast'],['_l','lunch'],['_d','dinner']].forEach(([suf,period])=>{
+    const mm = m[period] || {};
+    setSeg('segFull'+suf, mm.full); setSeg('segVege'+suf, mm.vege); setSeg('segCarb'+suf, mm.carb);
+    setSeg('segProt'+suf, mm.prot); setSeg('segWater'+suf, mm.water);
+  });
+  setSeg('segSweet', m.sweet); setSeg('segAlc', m.alc);
+  document.getElementById('saveBtn').textContent = '更新する';
+  document.getElementById('editBanner').style.display = 'flex';
+  document.getElementById('editBannerDate').textContent = r.date + ' の記録を編集中';
+  showTab('track');
+}
+function exitEditMode(){
+  EDITING_RECORD_ID = null;
+  ADDING_FOR_DATE = null;
+  document.getElementById('editBanner').style.display = 'none';
+  document.getElementById('saveBtn').textContent = '記録する';
+}
 async function saveRecord(){
   const c=cur(); if(!c){ toast('お客様を選択してください'); return; }
+  const wasEditing = EDITING_RECORD_ID;
+  const forDate = ADDING_FOR_DATE;
   const intensity=segVal('segIntensity');
   const rec={
     by:segVal('segBy'),
@@ -967,17 +1054,39 @@ async function saveRecord(){
           sweet:segVal('segSweet'), alc:segVal('segAlc')},
     memo:document.getElementById('inMemo').value.trim()
   };
-  const btn=document.getElementById('saveBtn'); btn.classList.add('loading'); btn.textContent='保存中…';
+  const btn=document.getElementById('saveBtn'); btn.classList.add('loading'); btn.textContent=wasEditing?'更新中…':'保存中…';
   try{
-    const ok = await rpc('gtl_record_add', {
-      ...auth(), p_cid:c.id, p_slot:null, p_by:rec.by,
-      p_happy:rec.happy, p_sleep:rec.sleep, p_fatigue:rec.fatigue,
-      p_changes:rec.changes, p_size:rec.size, p_meal:rec.meal, p_memo:rec.memo,
-      p_intensity:rec.intensity, p_intensity_note:rec.intensityNote
-    });
+    const ok = wasEditing
+      ? await rpc('gtl_record_update', {
+          ...auth(), p_cid:c.id, p_id:wasEditing, p_by:rec.by,
+          p_happy:rec.happy, p_sleep:rec.sleep, p_fatigue:rec.fatigue,
+          p_changes:rec.changes, p_size:rec.size, p_meal:rec.meal, p_memo:rec.memo,
+          p_intensity:rec.intensity, p_intensity_note:rec.intensityNote
+        })
+      : forDate
+      ? await rpc('gtl_record_add_for_date', {
+          ...auth(), p_cid:c.id, p_date:forDate, p_by:rec.by,
+          p_happy:rec.happy, p_sleep:rec.sleep, p_fatigue:rec.fatigue,
+          p_changes:rec.changes, p_size:rec.size, p_meal:rec.meal, p_memo:rec.memo,
+          p_intensity:rec.intensity, p_intensity_note:rec.intensityNote
+        })
+      : await rpc('gtl_record_add', {
+          ...auth(), p_cid:c.id, p_slot:null, p_by:rec.by,
+          p_happy:rec.happy, p_sleep:rec.sleep, p_fatigue:rec.fatigue,
+          p_changes:rec.changes, p_size:rec.size, p_meal:rec.meal, p_memo:rec.memo,
+          p_intensity:rec.intensity, p_intensity_note:rec.intensityNote
+        });
     if(!ok){ toast('保存できませんでした'); return; }
   }catch(e){ toast('通信エラー。電波の良い場所でもう一度どうぞ'); return; }
-  finally{ btn.classList.remove('loading'); btn.textContent='記録する'; }
+  finally{ btn.classList.remove('loading'); btn.textContent=wasEditing?'更新する':'記録する'; }
+
+  if(wasEditing || forDate){
+    exitEditMode();
+    await refresh();
+    toast(wasEditing?'記録を更新しました':'記録を追加しました');
+    showTab('karte');
+    return;
+  }
 
   /* 回数管理シートに利用ログを追記(Supabase経由・失敗しても記録自体は成功扱い) */
   if(c.sheetName){ rpc('gtl_ticket_log', {...auth(), p_cid:c.id}).catch(()=>{}); }
@@ -1039,7 +1148,6 @@ function renderKarte(){
   if(!c){ no.style.display='block'; body.innerHTML=''; recCard.style.display='none'; return; }
   no.style.display='none';
 
-  const rest=c.ticket.total-c.ticket.used;
   const rs=c.records||[];
   const avg=k=>{ const v=rs.map(r=>r[k]).filter(x=>x); return v.length? (v.reduce((a,b)=>a+b,0)/v.length).toFixed(1) : '—'; };
   const allChanges={}; rs.forEach(r=>(r.changes||[]).forEach(t=>allChanges[t]=(allChanges[t]||0)+1));
@@ -1055,7 +1163,6 @@ function renderKarte(){
       <div><div class="hint">きもち</div><div class="serif" style="font-size:24px;color:#8a744f">${avg('happy')}</div></div>
       <div><div class="hint">睡眠</div><div class="serif" style="font-size:24px;color:#8a744f">${avg('sleep')}</div></div>
       <div><div class="hint">体の軽さ</div><div class="serif" style="font-size:24px;color:#8a744f">${avg('fatigue')}</div></div>
-      ${c.corp?'':`<div><div class="hint">残り回数</div><div class="serif" style="font-size:24px;color:#8a744f">${rest}</div></div>`}
     </div>
     ${topChanges.length?`<label class="fl">体重以外に起きている変化</label>
       <div class="chips">${topChanges.map(([t,n])=>`<span class="chip mini on" style="cursor:default">${esc(t)} ×${n}</span>`).join('')}</div>`:''}
@@ -1078,20 +1185,36 @@ function renderKarte(){
 
   if(rs.length){
     recCard.style.display='block';
-    const face=v=>v?['','😞','😕','😐','🙂','😊'][v]:'—';
-    recs.innerHTML = rs.slice(0,30).map(r=>`
-      <div class="rec">
-        <div class="top"><span>${r.date}${r.slot?`（${esc(r.slot)}）`:''}</span><span>記入：${esc(r.by||'')}</span></div>
-        <div class="scores">
-          <span>きもち ${face(r.happy)}</span><span>睡眠 ${r.sleep??'—'}</span><span>体 ${r.fatigue??'—'}</span>
-        </div>
-        ${r.intensity?`<div class="tags"><span class="tag" style="background:#f1ede6">💪 ${esc(r.intensity)}${r.intensityNote?'：'+esc(r.intensityNote):''}</span></div>`:''}
-        ${(r.changes&&r.changes.length)?`<div class="tags">${r.changes.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:''}
-        ${r.size?`<div class="tags"><span class="tag">👗 ${esc(r.size)}</span></div>`:''}
-        ${mealSummary(r.meal)}
-        ${r.memo?`<div class="memo">${esc(r.memo)}</div>`:''}
-      </div>`).join('');
+    renderKarteRecs();
   } else recCard.style.display='none';
+}
+function renderKarteRecs(){
+  const c=cur(); if(!c) return;
+  const rs=c.records||[];
+  const recs=document.getElementById('karteRecs');
+  const datePick=document.getElementById('karteDatePick');
+  const selectedDate=datePick.value;
+  const face=v=>v?['','😞','😕','😐','🙂','😊'][v]:'—';
+  const list = selectedDate ? rs.filter(r=>r.date===selectedDate) : rs.slice(0,10);
+  if(!list.length){
+    recs.innerHTML = selectedDate
+      ? `<div class="empty">${selectedDate}の記録はありません。<div style="margin-top:10px"><button class="btn gold small" onclick="addRecordForDate('${selectedDate}')">この日の記録を追加する</button></div></div>`
+      : `<div class="empty">まだ記録がありません。</div>`;
+    return;
+  }
+  recs.innerHTML = list.map(r=>`
+    <div class="rec">
+      <div class="top"><span>${r.date}${r.slot?`（${esc(r.slot)}）`:''}</span>
+        <button class="btn ghost small" style="padding:3px 10px;font-size:11px" onclick="editRecord(${r.id})">編集</button></div>
+      <div class="scores">
+        <span>きもち ${face(r.happy)}</span><span>睡眠 ${r.sleep??'—'}</span><span>体 ${r.fatigue??'—'}</span>
+      </div>
+      ${r.intensity?`<div class="tags"><span class="tag" style="background:#f1ede6">💪 ${esc(r.intensity)}${r.intensityNote?'：'+esc(r.intensityNote):''}</span></div>`:''}
+      ${(r.changes&&r.changes.length)?`<div class="tags">${r.changes.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:''}
+      ${r.size?`<div class="tags"><span class="tag">👗 ${esc(r.size)}</span></div>`:''}
+      ${mealSummary(r.meal)}
+      ${r.memo?`<div class="memo">${esc(r.memo)}</div>`:''}
+    </div>`).join('');
 }
 function mealSummary(m){
   if(!m) return '';
@@ -1125,6 +1248,184 @@ function mealSummary(m){
 }
 
 /* ---------- library ---------- */
+/* ---------- AIチャット ---------- */
+let CHAT_LOADED_FOR = null;
+let CHAT_SENDING = false;
+let CHAT_ROWS = [];
+function chatBubbleHtml(role, text){
+  return `<div class="chat-msg ${role==='assistant'?'assistant':'user'}">${esc(text)}</div>`;
+}
+function chatPairHtml(userRow, assistantRow, opts){
+  opts = opts || {};
+  const saved = !!(userRow && userRow.saved) || !!(assistantRow && assistantRow.saved);
+  const tag = (userRow && userRow.tag) || (assistantRow && assistantRow.tag) || '';
+  const uid = userRow ? userRow.id : null;
+  return `<div class="chat-pair">
+    ${opts.showTag && tag ? `<span class="badge" style="align-self:flex-start">${esc(tag)}</span>` : ''}
+    ${userRow ? chatBubbleHtml('user', userRow.content) : ''}
+    ${assistantRow ? chatBubbleHtml('assistant', assistantRow.content) : ''}
+    ${uid!=null ? `<div class="chat-pair-actions">
+      ${opts.showTag ? `<button title="タグを編集" onclick="editChatTag(${uid},'${esc(tag).replace(/'/g,"\\'")}')">🏷️</button>` : ''}
+      <button class="${saved?'on':''}" title="保存" onclick="toggleChatSaved(${uid},${saved})">${saved?'★':'☆'}</button>
+      <button title="削除" onclick="deleteChatPair(${uid})">🗑</button>
+    </div>` : ''}
+  </div>`;
+}
+function chatPairs(){
+  const byUserId = {};
+  const users = [];
+  CHAT_ROWS.forEach(r=>{
+    if(r.role==='user'){ users.push(r); }
+    else if(r.role==='assistant' && r.reply_to!=null){ byUserId[r.reply_to] = r; }
+  });
+  return users.map(u=>({user:u, assistant:byUserId[u.id]}));
+}
+function renderChatList(){
+  const box = document.getElementById('chatMessages');
+  const pairs = chatPairs();
+  if(!pairs.length){
+    box.innerHTML = `<div class="empty">まだ会話はありません。気になることを聞いてみてください。</div>`;
+    return;
+  }
+  box.innerHTML = pairs.map(p=>chatPairHtml(p.user, p.assistant)).join('');
+  box.scrollTop = box.scrollHeight;
+}
+function savedChatItemHtml(p){
+  const tag = (p.user && p.user.tag) || (p.assistant && p.assistant.tag) || '';
+  const date = (p.user && p.user.created_at) ? p.user.created_at.slice(0,10) : '';
+  const summary = p.user ? p.user.content.slice(0,24) + (p.user.content.length>24?'…':'') : '';
+  const uid = p.user ? p.user.id : null;
+  const bodyId = 'savedBody'+uid;
+  return `<div class="chat-pair">
+    <div onclick="const el=document.getElementById('${bodyId}');el.style.display=el.style.display==='none'?'block':'none';"
+         style="cursor:pointer;display:flex;gap:8px;align-items:center;padding:9px 4px;border-bottom:1px solid var(--line)">
+      ${tag?`<span class="badge" style="flex-shrink:0">${esc(tag)}</span>`:''}
+      <span class="hint" style="flex-shrink:0">${date}</span>
+      <span style="font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(summary)}</span>
+      <span class="hint">▾</span>
+    </div>
+    <div id="${bodyId}" style="display:none;padding-top:10px">
+      ${chatBubbleHtml('user', p.user.content)}
+      ${p.assistant?chatBubbleHtml('assistant', p.assistant.content):''}
+      <div class="chat-pair-actions">
+        <button title="タグを編集" onclick="editChatTag(${uid},'${esc(tag).replace(/'/g,"\\'")}')">🏷️</button>
+        <button class="on" title="保存" onclick="toggleChatSaved(${uid},true)">★</button>
+        <button title="削除" onclick="deleteChatPair(${uid})">🗑</button>
+      </div>
+    </div>
+  </div>`;
+}
+function renderSavedChat(){
+  const card = document.getElementById('savedChatCard'), list = document.getElementById('savedChatList');
+  const saved = chatPairs().filter(p=>p.user.saved || (p.assistant && p.assistant.saved));
+  if(!saved.length){ card.style.display='none'; return; }
+  card.style.display='block';
+  list.innerHTML = saved.map(p=>savedChatItemHtml(p)).join('');
+}
+async function renderChat(){
+  const c = cur(), box = document.getElementById('chatMessages');
+  if(!c){ box.innerHTML=''; CHAT_LOADED_FOR=null; CHAT_ROWS=[]; document.getElementById('savedChatCard').style.display='none'; return; }
+  if(CHAT_LOADED_FOR===c.id) return;
+  box.innerHTML = `<div class="empty">読み込み中…</div>`;
+  let rows;
+  try{ rows = await rpc('gtl_chat_history', {...auth(), p_cid:c.id}); }
+  catch(e){ rows=null; }
+  if(!cur() || String(cur().id)!==String(c.id)) return; /* 通信中に切り替わっていたら描画しない */
+  CHAT_LOADED_FOR = c.id;
+  CHAT_ROWS = rows || [];
+  renderChatList();
+  renderSavedChat();
+}
+async function toggleChatSaved(userMessageId, currentlySaved){
+  const c = cur(); if(!c) return;
+  try{
+    const nowSaved = !currentlySaved;
+    await rpc('gtl_chat_set_saved', {...auth(), p_cid:c.id, p_user_message_id:userMessageId, p_saved:nowSaved});
+    if(nowSaved){
+      const tag = prompt('タグを付けますか？（空欄でもOK。後から変更できます）', '');
+      if(tag!==null && tag.trim()){
+        await rpc('gtl_chat_set_tag', {...auth(), p_cid:c.id, p_user_message_id:userMessageId, p_tag:tag.trim()});
+      }
+    }
+    CHAT_LOADED_FOR = null; await renderChat();
+  }catch(e){ toast('通信エラー'); }
+}
+async function editChatTag(userMessageId, currentTag){
+  const c = cur(); if(!c) return;
+  const tag = prompt('タグを入力してください（空欄で削除）', currentTag||'');
+  if(tag===null) return;
+  try{
+    await rpc('gtl_chat_set_tag', {...auth(), p_cid:c.id, p_user_message_id:userMessageId, p_tag:tag.trim()});
+    CHAT_LOADED_FOR = null; await renderChat();
+  }catch(e){ toast('通信エラー'); }
+}
+async function deleteChatPair(userMessageId){
+  const c = cur(); if(!c) return;
+  if(!confirm('この質問と回答を削除します。よろしいですか？')) return;
+  try{
+    await rpc('gtl_chat_delete_pair', {...auth(), p_cid:c.id, p_user_message_id:userMessageId});
+    CHAT_LOADED_FOR = null; await renderChat();
+  }catch(e){ toast('通信エラー'); }
+}
+async function sendChatMessage(){
+  const c = cur(); if(!c){ toast('お客様を選択してください'); return; }
+  const input = document.getElementById('chatInput');
+  const message = input.value.trim();
+  if(!message || CHAT_SENDING) return;
+  const box = document.getElementById('chatMessages');
+  if(box.querySelector('.empty')) box.innerHTML='';
+  CHAT_SENDING = true;
+  const btn = document.getElementById('chatSendBtn');
+  btn.classList.add('loading'); btn.setAttribute('disabled','');
+  input.value='';
+  box.insertAdjacentHTML('beforeend', chatBubbleHtml('user', message));
+  const assistantEl = document.createElement('div');
+  assistantEl.className = 'chat-msg assistant';
+  assistantEl.textContent = '…';
+  box.appendChild(assistantEl);
+  box.scrollTop = box.scrollHeight;
+
+  try{
+    const headers = { 'apikey':SUPABASE_ANON_KEY, 'Content-Type':'application/json' };
+    if(SUPABASE_ANON_KEY.startsWith('eyJ')) headers['Authorization'] = 'Bearer '+SUPABASE_ANON_KEY;
+    const res = await fetch(SUPABASE_URL + '/functions/v1/gtl-chat', {
+      method:'POST', headers, body: JSON.stringify({...auth(), p_cid:c.id, message})
+    });
+    if(!res.ok || !res.body) throw new Error('chat failed: '+res.status);
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer='', full='', first=true;
+    while(true){
+      const {done, value} = await reader.read();
+      if(done) break;
+      buffer += decoder.decode(value, {stream:true});
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+      for(const line of lines){
+        if(!line.startsWith('data: ')) continue;
+        const payload = line.slice(6).trim();
+        if(!payload) continue;
+        try{
+          const json = JSON.parse(payload);
+          if(json.text){
+            if(first){ assistantEl.textContent=''; first=false; }
+            full += json.text;
+            assistantEl.textContent = full;
+            box.scrollTop = box.scrollHeight;
+          }
+        }catch(e){}
+      }
+    }
+    if(!full) assistantEl.textContent = '（応答がありませんでした。もう一度お試しください）';
+    CHAT_LOADED_FOR = null; await renderChat(); /* 保存/削除ボタン用に本物のidを取得し直す */
+  }catch(e){
+    assistantEl.textContent = '通信エラーが発生しました。電波の良い場所でもう一度お試しください。';
+  }finally{
+    CHAT_SENDING = false;
+    btn.classList.remove('loading'); btn.removeAttribute('disabled');
+  }
+}
+
 function renderLib(){
   const isT = SESSION.role==='trainer';
   document.getElementById('magList').innerHTML = MAGAZINES.map(m=>`
@@ -1319,7 +1620,7 @@ function render(){
   /* 法人契約のお客様には回数券タブ自体を出さない(トレーナー画面でも) */
   const tbtn=document.querySelector('nav button[data-tab="ticket"]');
   if(tbtn) tbtn.style.display = (cur() && cur().corp) ? 'none' : '';
-  renderCustSel(); renderKarte(); renderLib(); renderTicket(); renderCelebration(); renderHome();
+  renderCustSel(); renderKarte(); renderLib(); renderTicket(); renderCelebration(); renderHome(); renderChat();
 }
 function timeOfDay(){
   const h=new Date().getHours();
@@ -1349,48 +1650,14 @@ function renderHome(){
     resvCard.style.display='none'; emptyCard.style.display='none';
   }
 }
-/* 「7/21(火) 19:00〜」形式の文字列 ⇔ 日付・時刻inputの相互変換 */
-function formatReservation_(dateStr, timeStr){
-  if(!dateStr) return '';
-  const dt=new Date(dateStr+'T00:00:00');
-  const wd=['日','月','火','水','木','金','土'][dt.getDay()];
-  const md=`${dt.getMonth()+1}/${dt.getDate()}(${wd})`;
-  return timeStr ? `${md} ${timeStr}〜` : md;
-}
-function parseReservation_(text){
-  const s = String(text||'');
-  const dm = s.match(/(\d{1,2})\/(\d{1,2})/);
-  if(!dm) return {date:'', time:''};
-  const tm = s.match(/(\d{1,2}):(\d{2})/);
-  const year = new Date().getFullYear();
-  const mo=String(dm[1]).padStart(2,'0'), da=String(dm[2]).padStart(2,'0');
-  return { date:`${year}-${mo}-${da}`, time: tm ? `${tm[1].padStart(2,'0')}:${tm[2]}` : '' };
-}
-function setReservation(){
+async function setReservation(){
   const c=cur(); if(!c) return;
-  document.getElementById('mResvWho').textContent = c.name+' さんの次回のご予約を入力してください';
-  const p = parseReservation_(c.nextReservation);
-  document.getElementById('mResvDate').value = p.date;
-  document.getElementById('mResvTime').value = p.time;
-  document.getElementById('mResvClearWrap').style.display = c.nextReservation ? 'block' : 'none';
-  openModal('ovResv');
-}
-async function saveReservation(){
-  const dateVal = document.getElementById('mResvDate').value;
-  if(!dateVal){ toast('日付を選んでください'); return; }
-  const timeVal = document.getElementById('mResvTime').value;
-  await submitReservation_(formatReservation_(dateVal, timeVal));
-}
-async function clearReservation(){
-  await submitReservation_('');
-}
-async function submitReservation_(text){
-  const c=cur(); if(!c) return;
+  const v=prompt(c.name+' さんの次回のご予約を入力してください（例：7/21(火) 19:00〜）', c.nextReservation||'');
+  if(v===null) return;
   try{
-    const ok=await rpc('gtl_customer_reservation',{...auth(), p_cid:c.id, p_reservation:text});
+    const ok=await rpc('gtl_customer_reservation',{...auth(), p_cid:c.id, p_reservation:v.trim()});
     if(!ok){ toast('設定できませんでした'); return; }
-    closeModal('ovResv');
-    await refresh(); toast(text ? '予約を更新しました' : '予約を削除しました');
+    await refresh(); toast('予約を更新しました');
   }catch(e){ toast('通信エラー'); }
 }
 function renderCelebration(){
