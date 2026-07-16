@@ -651,6 +651,21 @@ body[data-tod="evening"] .house-shade{opacity:.35;background:linear-gradient(180
   </div>
 </div>
 
+<!-- ============ reservation modal (trainer) ============ -->
+<div class="overlay" id="ovResv" onclick="if(event.target===this)closeModal('ovResv')">
+  <div class="modal">
+    <button class="close" onclick="closeModal('ovResv')">✕</button>
+    <h3>次回のご予約</h3>
+    <p class="hint" id="mResvWho" style="margin-bottom:6px"></p>
+    <label class="fl">日付</label>
+    <input type="date" id="mResvDate">
+    <label class="fl">時刻（任意）</label>
+    <input type="time" id="mResvTime">
+    <div style="margin-top:16px"><button class="btn gold" style="width:100%" onclick="saveReservation()">この内容で設定する</button></div>
+    <div style="margin-top:8px" id="mResvClearWrap"><button class="btn ghost" style="width:100%" onclick="clearReservation()">予約を削除する</button></div>
+  </div>
+</div>
+
 <!-- ============ recovery videos modal ============ -->
 <div class="overlay" id="ovMedi" onclick="if(event.target===this)closeModal('ovMedi')">
   <div class="modal medi">
@@ -1650,14 +1665,47 @@ function renderHome(){
     resvCard.style.display='none'; emptyCard.style.display='none';
   }
 }
-async function setReservation(){
+function formatReservation_(dateStr, timeStr){
+  if(!dateStr) return '';
+  const dt=new Date(dateStr+'T00:00:00');
+  const wd=['日','月','火','水','木','金','土'][dt.getDay()];
+  const md=`${dt.getMonth()+1}/${dt.getDate()}(${wd})`;
+  return timeStr ? `${md} ${timeStr}〜` : md;
+}
+function parseReservation_(text){
+  const s = String(text||'');
+  const dm = s.match(/(\d{1,2})\/(\d{1,2})/);
+  if(!dm) return {date:'', time:''};
+  const tm = s.match(/(\d{1,2}):(\d{2})/);
+  const year = new Date().getFullYear();
+  const mo=String(dm[1]).padStart(2,'0'), da=String(dm[2]).padStart(2,'0');
+  return { date:`${year}-${mo}-${da}`, time: tm ? `${tm[1].padStart(2,'0')}:${tm[2]}` : '' };
+}
+function setReservation(){
   const c=cur(); if(!c) return;
-  const v=prompt(c.name+' さんの次回のご予約を入力してください（例：7/21(火) 19:00〜）', c.nextReservation||'');
-  if(v===null) return;
+  document.getElementById('mResvWho').textContent = c.name+' さんの次回のご予約を入力してください';
+  const p = parseReservation_(c.nextReservation);
+  document.getElementById('mResvDate').value = p.date;
+  document.getElementById('mResvTime').value = p.time;
+  document.getElementById('mResvClearWrap').style.display = c.nextReservation ? 'block' : 'none';
+  openModal('ovResv');
+}
+async function saveReservation(){
+  const dateVal = document.getElementById('mResvDate').value;
+  if(!dateVal){ toast('日付を選んでください'); return; }
+  const timeVal = document.getElementById('mResvTime').value;
+  await submitReservation_(formatReservation_(dateVal, timeVal));
+}
+async function clearReservation(){
+  await submitReservation_('');
+}
+async function submitReservation_(text){
+  const c=cur(); if(!c) return;
   try{
-    const ok=await rpc('gtl_customer_reservation',{...auth(), p_cid:c.id, p_reservation:v.trim()});
+    const ok=await rpc('gtl_customer_reservation',{...auth(), p_cid:c.id, p_reservation:text});
     if(!ok){ toast('設定できませんでした'); return; }
-    await refresh(); toast('予約を更新しました');
+    closeModal('ovResv');
+    await refresh(); toast(text ? '予約を更新しました' : '予約を削除しました');
   }catch(e){ toast('通信エラー'); }
 }
 function renderCelebration(){
