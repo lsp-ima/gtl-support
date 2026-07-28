@@ -1103,8 +1103,12 @@ async function saveRecord(){
     return;
   }
 
-  /* 回数管理シートに利用ログを追記(Supabase経由・失敗しても記録自体は成功扱い) */
-  if(c.sheetName){ rpc('gtl_ticket_log', {...auth(), p_cid:c.id}).catch(()=>{}); }
+  /* 回数管理シートに利用ログを追記(Supabase経由)。記録自体は成功扱いのまま裏で進める。
+     2026-07-28: 以前はここで失敗を握りつぶしていたため、シートに入っていないのに
+     何も表示されず、トレーナーが「記録する」を押し直して同じ日が2回入る事故になっていた。
+     シート側(GAS v9)は同じ日を二重に書かなくなったので、黙って自動で3回まで試し、
+     それでもダメな時だけ知らせる。 */
+  if(c.sheetName) logTicketUse(c);
 
   /* 食事アドバイス(事前作成パターン、根拠動画リンク付き) */
   const hits = MEAL_ADVICE.filter(a=>{ try{return a.when(rec.meal);}catch(e){return false;} });
@@ -1498,6 +1502,17 @@ async function sendArticle(title,url){
 /* ---------- ticket ----------
    回数管理シートへは直接アクセスしない(トークンをブラウザに出さないため)。
    Supabase側のサーバー関数(gtl_ticket_lookup/gtl_ticket_log)経由でのみ問い合わせる。 */
+
+/* 利用ログをシートに反映する。GASの応答は数秒〜十数秒かかり、途中で切れることがある。
+   シート側は同じ日を二重に書かない(冪等)ので、何度呼び直しても増えない。 */
+async function logTicketUse(c){
+  for(let i=0;i<3;i++){
+    try{ if(await rpc('gtl_ticket_log', {...auth(), p_cid:c.id})) return true; }catch(e){}
+    await new Promise(r=>setTimeout(r, 2000*(i+1)));
+  }
+  toast('回数シートに反映できませんでした。回数券タブを開いてご確認ください');
+  return false;
+}
 async function renderTicket(){
   const c=cur(), no=document.getElementById('noCust3'), body=document.getElementById('ticketBody');
   if(!c){ no.style.display='block'; body.innerHTML=''; return; }
