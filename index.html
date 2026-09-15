@@ -1531,10 +1531,15 @@ async function renderTicket(){
     return;
   }
   body.innerHTML = `<div class="ticket skel" style="height:132px"></div>`;
-  let r;
-  try{ r = await rpc('gtl_ticket_lookup', {...auth(), p_cid:c.id}); }catch(e){ r=null; }
-  /* 通信中に別のお客様へ切り替わっていたら描画しない */
-  if(!cur() || String(cur().id)!==String(c.id)) return;
+  /* GAS応答は数秒〜十数秒かかり時々失敗する(利用ログ側と同じ既知の不安定さ)ので、
+     ここも黙って3回まで試してから諦める。 */
+  let r=null;
+  for(let i=0;i<3;i++){
+    try{ r = await rpc('gtl_ticket_lookup', {...auth(), p_cid:c.id}); }catch(e){ r=null; }
+    if(!cur() || String(cur().id)!==String(c.id)) return;
+    if(r && !r.error) break;
+    if(i<2) await new Promise(res=>setTimeout(res, 2000*(i+1)));
+  }
   if(!r || r.error){
     body.innerHTML = `<div class="empty">シートに接続できませんでした。電波の良い場所でもう一度お試しください。<div style="margin-top:10px"><button class="btn ghost small" onclick="renderTicket()">再読み込み</button></div></div>`;
     return;
