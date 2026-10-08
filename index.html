@@ -395,6 +395,15 @@ body[data-tod="evening"] .house-shade{opacity:.35;background:linear-gradient(180
         <button data-v="お客様">ご本人</button>
       </div>
 
+      <div class="card" style="margin:16px -2px 4px">
+        <label class="fl" style="margin-top:0;font-size:13.5px;color:var(--ink);font-weight:600">体重 <span id="wDate" style="font-weight:400;color:var(--ink-soft);font-size:12px"></span></label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div><label class="fl" style="margin-top:4px">🌙 寝る前</label><input type="number" inputmode="decimal" step="0.1" id="wNight" placeholder="kg" onchange="saveWeight('night',this)"></div>
+          <div><label class="fl" style="margin-top:4px">🌅 朝</label><input type="number" inputmode="decimal" step="0.1" id="wMorning" placeholder="kg" onchange="saveWeight('morning',this)"></div>
+        </div>
+        <div id="wSt" style="font-size:11.5px;color:var(--ink-soft);margin-top:6px"></div>
+      </div>
+
       <div class="card" style="margin:16px -2px 4px;background:var(--gold-pale);border-color:var(--gold-light)">
         <label class="fl" style="margin-top:0;font-size:13.5px;color:var(--ink);font-weight:600">今日のトレーニング強度</label>
         <div class="seg" id="segIntensity">
@@ -1648,8 +1657,31 @@ async function openCustModal(){
 }
 
 /* ---------- render all ---------- */
+/* ---------- 体重(寝る前・朝。入れたらすぐ保存。トレーナーのカルテに出る) ---------- */
+function weightDate(){ const d=new Date(); return new Date(d-d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
+let weightFor=null;
+async function loadWeight(){
+  const c=cur(); if(!c) return;
+  const d=weightDate(), key=c.id+'|'+d; if(weightFor===key) return; weightFor=key;
+  document.getElementById('wDate').textContent=d.slice(5).replace('-','/');
+  const n=document.getElementById('wNight'), m=document.getElementById('wMorning'); n.value=''; m.value='';
+  try{
+    const rows=await rpc('gtl_weight_list',{...auth(), p_cid:c.id})||[];
+    rows.filter(r=>r.date===d).forEach(r=>{ (r.slot==='night'?n:m).value=r.kg; });
+  }catch(e){}
+}
+async function saveWeight(slot, el){
+  const c=cur(); if(!c) return;
+  const v=el.value.trim(), kg=v===''?null:Number(v), st=document.getElementById('wSt');
+  if(kg!==null && !(kg>20 && kg<300)){ st.textContent='数字を確認してください'; return; }
+  try{
+    const ok=await rpc('gtl_weight_set',{...auth(), p_cid:c.id, p_date:weightDate(), p_slot:slot, p_kg:kg});
+    st.textContent = ok ? (slot==='night'?'寝る前':'朝')+'の体重を保存しました' : '保存できませんでした';
+  }catch(e){ st.textContent='通信エラー。電波の良い場所でもう一度どうぞ'; }
+}
 function render(){
   const has=!!cur();
+  if(has) loadWeight();
   document.getElementById('noCust1').style.display=has?'none':'block';
   document.getElementById('trackForm').style.display=has?'block':'none';
   /* 法人契約のお客様には回数券タブ自体を出さない(トレーナー画面でも) */

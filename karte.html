@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Training Karte</title>
+<style>
+:root{
+  --gold:#b3905f; --gold-deep:#96784a; --gold-light:#d9c4a3; --gold-pale:#f5eee1;
+  --ink:#2a2521; --ink-soft:#7c7061;
+  --bg:#f4efe7; --card:#fffdf9; --line:#e8ddcb;
+  --good:#7a9e7e; --warn:#c98a4b; --bad:#b95c50;
+  --radius:18px; --shadow:0 3px 16px rgba(96,74,44,.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",-apple-system,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.7;padding-bottom:80px}
+h2,h3{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-weight:600}
+header{background:linear-gradient(160deg,#221d17,#3b332a 70%,#4a3f31);color:#fff;padding:18px 20px 14px;text-align:center}
+header .brand{font-size:10.5px;letter-spacing:.42em;color:var(--gold-light)}
+header h1{font-family:"Didot","Bodoni 72","Hiragino Mincho ProN",serif;font-size:21px;font-weight:400;letter-spacing:.1em}
+header .sub{font-size:10px;color:#b7ab99;letter-spacing:.08em}
+.custbar{position:sticky;top:0;z-index:50;background:rgba(255,253,249,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:8px;align-items:center}
+.custbar select,.custbar input[type=date]{font-size:16px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:#fff;font-family:inherit;color:var(--ink)}
+.custbar select{flex:1;min-width:0}
+.link{font-size:10px;color:var(--ink-soft);padding:0 16px;margin-top:6px}
+main{max-width:720px;margin:0 auto;padding:12px 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;margin-bottom:12px}
+.cat-h{display:flex;align-items:center;gap:8px;cursor:pointer}
+.cat-h .no{color:var(--gold-deep);font-size:12px;min-width:20px}
+.cat-h h3{flex:1;font-size:16px}
+.cat-h .tog{color:var(--ink-soft);font-size:12px}
+.cat-b{margin-top:10px}
+.cat.closed .cat-b{display:none}
+.hint{font-size:12px;color:var(--ink-soft);margin-bottom:8px;white-space:pre-line}
+label.f{display:block;font-size:12px;color:var(--ink-soft);margin:10px 0 4px}
+input[type=text],input[type=number],textarea,select.f{width:100%;font-size:15px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;font-family:inherit;color:var(--ink)}
+textarea{min-height:64px;resize:vertical}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 12px;font-size:13px;cursor:pointer;user-select:none}
+.chip.on{background:var(--gold);border-color:var(--gold);color:#fff}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-weight:normal;color:var(--ink-soft);font-size:11px;text-align:left;padding:2px 3px}
+td{padding:3px}
+td input{width:100%;font-size:14px;padding:6px;border:1px solid var(--line);border-radius:8px;font-family:inherit}
+.btn{border:1px solid var(--gold);background:#fff;color:var(--gold-deep);border-radius:999px;padding:6px 14px;font-size:13px;cursor:pointer;font-family:inherit}
+.btn.solid{background:var(--gold);color:#fff}
+.btn.sm{padding:3px 10px;font-size:12px}
+.tabs{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex}
+.tabs button{flex:1;background:none;border:none;padding:12px 0 16px;font-size:13px;color:var(--ink-soft);font-family:inherit;cursor:pointer}
+.tabs button.on{color:var(--gold-deep);font-weight:600}
+.view{display:none}.view.on{display:block}
+.hist{display:flex;gap:10px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line)}
+.hist:last-child{border-bottom:none}
+.hist .d{font-size:13px;color:var(--gold-deep);min-width:86px}
+.hist .s{font-size:13px}
+.ed{display:flex;align-items:center;gap:6px;padding:8px 0;border-bottom:1px solid var(--line)}
+.ed input[type=text]{flex:1}
+.ed.hidden input[type=text]{color:#bbb;text-decoration:line-through}
+.items{margin:4px 0 8px 26px;font-size:12px;color:var(--ink-soft)}
+.items div{display:flex;gap:6px;align-items:center;padding:2px 0}
+.media{display:flex;flex-wrap:wrap;gap:6px}.media img,.media video{width:110px;height:146px;object-fit:cover;border-radius:10px;border:1px solid var(--line);background:#000}
+.cmp{display:flex;gap:10px;overflow-x:auto;margin-top:12px;padding-bottom:6px}
+.cc{flex:0 0 46%;display:flex;flex-direction:column;gap:4px;align-items:center}
+.cc .d{font-size:12px;color:var(--gold-deep)}
+.cc img,.cc video{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;background:#000}
+.cc .v{font-size:12px;text-align:center}
+.ex{border:1px solid var(--line);border-radius:12px;padding:8px;margin-top:8px;display:flex;flex-direction:column;gap:6px}
+.ex .r1{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ex select.f option[value=""]{color:#999}
+.ex .r2{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.ex .r2 input{width:100%;min-width:0;font-size:14px;padding:6px;border:1px solid var(--line);border-radius:8px;font-family:inherit}
+.ex .r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.ex select.f{padding:6px;font-size:13px}
+.rv{margin-top:4px}
+.why{font-size:11px;color:var(--gold-deep)}
+.vt{display:flex;flex-direction:column;gap:4px;align-items:center}
+#login{position:fixed;inset:0;z-index:200;background:linear-gradient(160deg,#221d17,#3b332a 70%,#4a3f31);display:flex;align-items:center;justify-content:center;padding:24px}
+#login.off{display:none}
+.lg-in{width:100%;max-width:340px;text-align:center;color:#fff;display:flex;flex-direction:column;gap:10px}
+.lg-in .brand{font-size:10.5px;letter-spacing:.42em;color:var(--gold-light)}
+.lg-in h1{font-family:"Didot","Bodoni 72","Hiragino Mincho ProN",serif;font-weight:400;font-size:30px;letter-spacing:.08em}
+.lg-in .sub{font-size:11px;color:#b7ab99;margin-bottom:8px}
+.lg-in input{font-size:16px;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-family:inherit}
+#rec{display:none;position:fixed;inset:0;background:rgba(20,16,12,.96);z-index:110;padding:16px;overflow:auto}
+#rec.on{display:block}
+#rec video{width:100%;display:block;border-radius:12px;background:#000}
+.rec-bt{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px}
+.wt svg{width:100%;height:120px;display:block}
+.wt .lg{display:flex;gap:14px;font-size:12px;color:var(--ink-soft);margin-top:4px}
+.wt .lg b{font-weight:600;color:var(--ink)}
+#trk{display:none;position:fixed;inset:0;background:rgba(20,16,12,.92);z-index:100;padding:16px;overflow:auto}
+#trk.on{display:block}
+.trk-in{max-width:520px;margin:0 auto}
+.trk-st{position:relative}
+.trk-st video{width:100%;display:block;border-radius:12px}
+.trk-st canvas{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+.mock{background:var(--gold-pale);border:1px dashed var(--gold);border-radius:12px;padding:8px 12px;font-size:12px;color:var(--gold-deep);margin-bottom:12px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">GINZA TRAINING LAB</div>
+  <h1>Training Karte</h1>
+  <div class="sub">トレーナー専用</div>
+</header>
+
+<div class="custbar">
+  <select id="cust"></select>
+  <input type="date" id="date">
+</div>
+<div class="link" id="saveSt"></div>
+
+<main>
+
+  <section class="view on" id="v-eval"></section>
+  <section class="view" id="v-train"></section>
+
+  <section class="view" id="v-cmp">
+    <div class="card">
+      <h3 id="cmpTitle"></h3>
+      <label class="f">並べる項目</label>
+      <select class="f" id="cmpKey" onchange="renderCmp()"></select>
+      <div id="cmpGrid" class="cmp"></div>
+    </div>
+  </section>
+
+  <section class="view" id="v-cat">
+    <div class="card">
+      <h3>カテゴリの編集</h3>
+      <p class="hint">名前を直す・評価/トレで置くページを切り替え・↑↓で並べ替え・隠す。中の項目も足せます。</p>
+      <div id="catEdit"></div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="btn" onclick="addCat()">＋ カテゴリを足す</button>
+        <button class="btn" onclick="resetCats()">最初の形に戻す</button>
+      </div>
+    </div>
+  </section>
+</main>
+<div id="login"><div class="lg-in">
+  <div class="brand">GINZA TRAINING LAB</div><h1>Training Karte</h1><div class="sub">トレーナー専用</div>
+  <input id="lgName" type="text" placeholder="お名前" autocomplete="username">
+  <input id="lgPass" type="password" placeholder="合言葉" autocomplete="current-password">
+  <button class="btn solid" id="lgBtn" onclick="doLogin()">ひらく</button>
+  <div id="lgErr" class="hint" style="color:#e8b4a8;margin-top:8px"></div>
+</div></div>
+<div id="rec"><div class="trk-in">
+  <div class="trk-st"><video id="recV" playsinline muted autoplay></video><canvas id="recC"></canvas></div>
+  <div id="recS" class="hint" style="color:#ddd;text-align:center;margin-top:6px"></div>
+  <div class="rec-bt">
+    <button class="btn" onclick="recFlip()">カメラ切替</button>
+    <button class="btn solid" id="recGo" onclick="recGo()">録画開始</button>
+    <label class="btn">ファイルから<input type="file" id="recFile" hidden onchange="recFromFile(this)"></label>
+    <button class="btn" onclick="recClose()">閉じる</button>
+  </div>
+</div></div>
+<div id="trk"><div class="trk-in">
+  <div class="trk-st"><video id="trkV" playsinline muted controls loop crossorigin="anonymous"></video><canvas id="trkC"></canvas></div>
+  <div id="trkS" class="hint" style="color:#ddd;text-align:center;margin-top:6px"></div>
+  <div style="text-align:center;margin-top:8px"><button class="btn" onclick="closeTrack()">閉じる</button></div>
+</div></div>
+
+<nav class="tabs">
+  <button class="on" data-v="eval">評価</button>
+  <button data-v="train">トレーニング</button>
+  <button data-v="cmp">比較</button>
+  <button data-v="cat">カテゴリ</button>
+</nav>
+
+<script>
+// 初期カテゴリ = 今村式トレーニング設計システム ①〜⑩
+// 項目の型: text / area / select / chips / sets
+const DEFAULT_CATS = [
+  {page:'eval',name:'S:本人の話', hint:'気になるところ・うまくいかない動作・睡眠/疲労/ストレス', items:[
+    {t:'area',label:'気になるところ・うまくいかない動作'},
+    {t:'select',label:'睡眠',opts:['よい','ふつう','わるい']},
+    {t:'select',label:'疲労',opts:['少ない','ふつう','強い']},
+    {t:'select',label:'ストレス',opts:['少ない','ふつう','強い']}]},
+  {page:'eval',name:'目的', hint:'ここで決まるのは方向だけ。種目はまだ決めない', items:[
+    {t:'chips',label:'目的',opts:['ダイエット','脚やせ','ウエスト','姿勢','スポーツ','痛みの予防']},
+    {t:'chips',label:'使いたい動作パターン',opts:['Hinge','Squat','Push水平','Push垂直','Pull水平','Pull垂直','Carry/抗回旋']}]},
+  {page:'eval',name:'姿勢', hint:'撮ると前回の写真と並べられます(比較タブ)', items:[
+    {t:'auto',kind:'photo',key:'姿勢',label:'写真',rows:[['正面'],['側面']],ch:[]}]},
+  {page:'eval',name:'O:動作スクリーニング', hint:'FMS等。何ができて何ができないか', items:[
+    {t:'fms',label:'FMS',opts:['ディープスクワット','ハードルステップ','肩の可動性','体幹安定プッシュアップ','回旋安定性']},
+    {t:'auto',kind:'squat',key:'SQ',label:'SQ どの関節から動くか(真横から撮る)',rows:[['ディープスクワット']],ch:['股関節から','膝から','足首から','同時']},
+    {t:'auto',kind:'neck',key:'頚椎回旋',label:'頚椎回旋 顎と肩が一直線ならOK(真横から撮る・回す側にカメラ)',rows:[['右へ回す'],['左へ回す']],ch:['OK','NG']},
+    {t:'auto',kind:'slb',key:'片脚立ち',label:'片脚立ち 揺れたらエラー(正面から撮る・首も眼球も右→左の順)',rows:[['右脚立ち・首を右→左','head'],['右脚立ち・眼球を右→左','eye'],['左脚立ち・首を右→左','head'],['左脚立ち・眼球を右→左','eye']],ch:['安定','揺れる']},
+    {t:'area',label:'気づいたこと'}]},
+  {page:'eval',name:'エラーの原因(進化の順序)', hint:'機能していない一番古い動作を特定する', items:[
+    {t:'chips',label:'機能していない動作',opts:['呼吸・横隔膜','頚椎回旋','胸椎回旋','体幹の近位安定','四肢の分離','四つ這い・移行','立位・二足']},
+    {t:'chips',label:'感覚系',opts:['固有受容覚','前庭覚','触覚']},
+    {t:'area',label:'見立て'}]},
+  {page:'eval',name:'A:評価', hint:'進化の階層の仮説+感覚系+フェーズ判断', items:[{t:'area',label:'評価'}]},
+  {page:'train',name:'メニュー', hint:'種目ごとにブロックと段階を選ぶと、ブロック順→段階順(呼吸→体幹近位→寝て四肢分離→四つ這い→立位→競技特異)に並ぶ\n使える→強度を乗せる/使えない→レグレッションを低強度・高品質で', items:[
+    {t:'menu',label:'種目',opts:['呼吸・横隔膜','体幹の近位安定','寝た状態での四肢の分離','四つ這い・移行パターン','立位・二足','競技特異的パターン']}]},
+  {page:'train',name:'P:次回', hint:'次回の介入・変数の調整・再評価のタイミング', items:[
+    {t:'area',label:'次回やること'},
+    {t:'text',label:'再評価の予定'}]},
+];
+
+// ===== 接続(Private Lounge と同じ Supabase・同じ合言葉) =====
+const SUPABASE_URL='https://mgzirvfpzewnkwnylezl.supabase.co';
+const SUPABASE_ANON_KEY='sb_publishable_HKRCi-vX7u_atr67uRqxJQ_4GkFZUEI';
+let SESSION={name:null,pass:null};
+const auth=()=>({p_name:SESSION.name,p_pass:SESSION.pass});
+function hdrs(){ const h={'apikey':SUPABASE_ANON_KEY,'Content-Type':'application/json'}; if(SUPABASE_ANON_KEY.startsWith('eyJ')) h['Authorization']='Bearer '+SUPABASE_ANON_KEY; return h; }
+async function rpc(fn,args){
+  const res=await fetch(SUPABASE_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:hdrs(),body:JSON.stringify(args||{})});
+  if(!res.ok) throw new Error(fn+' '+res.status);
+  const t=await res.text(); return t?JSON.parse(t):null;
+}
+async function media(action,path){
+  const res=await fetch(SUPABASE_URL+'/functions/v1/gtl-karte-media',{method:'POST',headers:hdrs(),body:JSON.stringify({...auth(),action,path})});
+  const j=await res.json().catch(()=>({})); if(!res.ok) throw new Error(j.error||res.status); return j;
+}
+function remember(k,v){ try{ v===null?localStorage.removeItem(k):localStorage.setItem(k,v); }catch(e){} }
+function recall(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function clone(o){return JSON.parse(JSON.stringify(o))}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function today(){ const d=new Date(); return new Date(d-d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
+
+let CUSTOMERS=[], cats=clone(DEFAULT_CATS), KARTES=[], CUR={}, WEIGHTS=[];
+const cs=document.getElementById('cust'), dt=document.getElementById('date');
+dt.value=today();
+
+async function doLogin(auto){
+  const name=auto?recall('gtl_name'):document.getElementById('lgName').value.trim();
+  const pass=auto?recall('gtl_pass'):document.getElementById('lgPass').value.trim();
+  const err=document.getElementById('lgErr');
+  if(!name||!pass){ if(!auto) err.textContent='お名前と合言葉を入れてください'; return; }
+  err.textContent='確認中…';
+  try{
+    const data=await rpc('gtl_bootstrap',{p_name:name,p_pass:pass});
+    if(!data){ err.textContent='お名前か合言葉が違います'; return; }
+    if(data.role!=='trainer'){ err.textContent='トレーナー専用のページです'; return; }
+    SESSION={name,pass}; remember('gtl_name',name); remember('gtl_pass',pass);
+    CUSTOMERS=(data.customers||[]).filter(c=>c.active!==false);
+    const cfg=await rpc('gtl_karte_config_get',auth());
+    if(cfg&&Array.isArray(cfg.cats)&&cfg.cats.length) cats=cfg.cats;
+    if(cfg&&cfg.exercises) Object.assign(EXS,cfg.exercises), buildDatalists();
+    cs.innerHTML=CUSTOMERS.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+    const last=recall('gtl_karte_cid'); if(last&&CUSTOMERS.some(c=>String(c.id)===last)) cs.value=last;
+    document.getElementById('login').classList.add('off'); err.textContent='';
+    await loadCustomer();
+  }catch(e){ err.textContent='接続できませんでした。電波をご確認ください'; }
+}
+// お客さまを切り替えたら、その人のカルテ一覧と体重を読み直す
+async function loadCustomer(){
+  remember('gtl_karte_cid',cs.value);
+  setSt('読み込み中…');
+  [KARTES,WEIGHTS]=await Promise.all([rpc('gtl_karte_list',{...auth(),p_cid:+cs.value}),rpc('gtl_weight_list',{...auth(),p_cid:+cs.value})]);
+  KARTES=KARTES||[]; WEIGHTS=WEIGHTS||[];
+  openDate();
+}
+// 日付のカルテを開く(なければ空欄)
+function openDate(){
+  const k=KARTES.find(x=>x.date===dt.value);
+  CUR=(k&&k.data&&k.data.media)?clone(k.data.media):{};
+  renderKarte(); if(k) restore(k.data);
+  setSt(k?'この日のカルテを開きました':'新しいカルテ');
+  if(document.getElementById('v-cmp').classList.contains('on')) renderCmp();
+}
+cs.onchange=loadCustomer; dt.onchange=openDate;
+
+// ===== 入力内容の書き出し・復元(項目は「カテゴリ|項目名」で覚える) =====
+function collect(){
+  const f={}, auto={}, menu=[];
+  document.querySelectorAll('.view .it').forEach(box=>{
+    const ik=box.dataset.ik;
+    if(box.querySelector('.menu')){
+      box.querySelectorAll('.ex').forEach(e=>menu.push([...e.querySelectorAll('input,select')].map(x=>x.value)));
+      return;
+    }
+    if(box.querySelector('tr[data-key]')){
+      box.querySelectorAll('tr[data-key]').forEach(tr=>{ auto[tr.dataset.key]={vals:[...tr.querySelectorAll('select')].map(x=>x.value), why:tr.querySelector('.why')?.textContent||''}; });
+      return;
+    }
+    const chips=[...box.querySelectorAll('.chip.on')].map(c=>c.textContent);
+    if(box.querySelector('.chip')){ f[ik]=chips; return; }
+    f[ik]=[...box.querySelectorAll('input,select,textarea')].map(x=>x.value);
+  });
+  return {f,auto,menu,media:CUR};
+}
+function restore(d){
+  if(!d) return;
+  document.querySelectorAll('.view .it').forEach(box=>{
+    const ik=box.dataset.ik;
+    if(box.querySelector('.menu')){
+      const m=box.querySelector('.menu'); m.innerHTML='';
+      (d.menu||[]).forEach(vals=>{ m.insertAdjacentHTML('beforeend',exHtml()); const e=m.lastElementChild;
+        [...e.querySelectorAll('input,select')].forEach((x,i)=>{ x.value=vals[i]??''; });
+        const part=e.querySelectorAll('.r1')[1].querySelector('select'); part.nextElementSibling.setAttribute('list','dl-'+(part.value||'all')); });
+      while(m.children.length<3) m.insertAdjacentHTML('beforeend',exHtml());
+      return;
+    }
+    if(box.querySelector('tr[data-key]')){
+      box.querySelectorAll('tr[data-key]').forEach(tr=>{ const a=(d.auto||{})[tr.dataset.key]; if(!a) return;
+        [...tr.querySelectorAll('select')].forEach((x,i)=>{ x.value=a.vals[i]??''; });
+        const w=tr.querySelector('.why'); if(w) w.textContent=a.why||''; const s=tr.querySelector('select'); if(s) slbErr(s); });
+      return;
+    }
+    const v=(d.f||{})[ik]; if(v==null) return;
+    if(box.querySelector('.chip')){ box.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',v.includes(c.textContent))); return; }
+    [...box.querySelectorAll('input,select,textarea')].forEach((x,i)=>{ x.value=v[i]??''; });
+  });
+  document.querySelectorAll('.view tr[data-key]').forEach(showRowMedia);
+}
+// ===== 自動保存(書いたら1.5秒後に保存) =====
+let saveTimer=null;
+function setSt(t){ document.getElementById('saveSt').textContent=t; }
+function queueSave(){ clearTimeout(saveTimer); setSt('保存待ち…'); saveTimer=setTimeout(saveKarte,1500); }
+async function saveKarte(){
+  clearTimeout(saveTimer);
+  const data=collect(), d=dt.value;
+  try{
+    const ok=await rpc('gtl_karte_save',{...auth(),p_cid:+cs.value,p_date:d,p_data:data});
+    if(!ok) throw new Error('rejected');
+    const i=KARTES.findIndex(x=>x.date===d); if(i>=0) KARTES[i].data=data; else { KARTES.push({date:d,data}); KARTES.sort((a,b)=>a.date<b.date?-1:1); }
+    const t=new Date(); setSt(`保存しました ${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}`);
+  }catch(e){ setSt('保存できませんでした。電波を確認してもう一度'); }
+}
+document.addEventListener('input',e=>{ if(e.target.closest('#v-eval,#v-train')) queueSave(); });
+document.addEventListener('change',e=>{ if(e.target.closest('#v-eval,#v-train')&&e.target.type!=='file') queueSave(); });
+document.addEventListener('click',e=>{ if(e.target.classList.contains('chip')) queueSave(); });
+
+// ===== カテゴリ設定の保存(全員共通・サーバー) =====
+let cfgTimer=null;
+function save(){ clearTimeout(cfgTimer); cfgTimer=setTimeout(()=>rpc('gtl_karte_config_set',{...auth(),p_cats:cats,p_exercises:null}).catch(()=>alert('カテゴリを保存できませんでした')),800); }
+
+// タブ
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+b.dataset.v));
+  window.scrollTo(0,0);
+});
+
+function itemHtml(it){
+  const L=`<label class="f">${esc(it.label)}</label>`;
+  if(it.t==='text') return L+`<input type="text">`;
+  if(it.t==='area') return L+`<textarea></textarea>`;
+  if(it.t==='select') return L+`<select class="f"><option></option>${(it.opts||[]).map(o=>`<option>${esc(o)}</option>`).join('')}</select>`;
+  if(it.t==='chips') return L+`<div class="chips">${(it.opts||[]).map(o=>`<span class="chip">${esc(o)}</span>`).join('')}</div>`;
+  if(it.t==='fms') return L+`<table><tr><th>テスト</th><th>左</th><th>右</th></tr>${it.opts.map(o=>{const sc=`<select class="f" style="padding:6px"><option></option><option>3</option><option>2</option><option>1</option><option>0</option></select>`;return /ディープスクワット|体幹安定/.test(o)?`<tr><td>${esc(o)}</td><td colspan="2">${sc}</td></tr>`:`<tr><td>${esc(o)}</td><td>${sc}</td><td>${sc}</td></tr>`}).join('')}</table>`;
+  if(it.t==='stages') return `<table><tr><th style="width:30%">段階</th><th>やったこと</th><th style="width:22%">結果</th><th style="width:18%">感覚</th></tr>${it.opts.map(o=>`<tr><td style="font-size:12px">${esc(o)}</td><td><input></td><td><select class="f" style="padding:6px;font-size:13px"><option></option><option>できた</option><option>崩れた</option><option>飛ばした</option></select></td><td><select class="f" style="padding:6px;font-size:13px"><option></option><option>固有</option><option>前庭</option><option>触覚</option></select></td></tr>`).join('')}</table>`;
+  if(it.t==='lr'){const sc=`<select class="f" style="padding:6px;font-size:13px"><option></option>${it.ch.map(c=>`<option>${esc(c)}</option>`).join('')}</select>`;
+    return L+`<table><tr><th>条件</th><th>左</th><th>右</th></tr>${it.opts.map(o=>`<tr><td style="font-size:13px">${esc(o)}</td><td>${sc}</td><td>${sc}</td></tr>`).join('')}</table>`;}
+  if(it.t==='auto'){
+    const sc=`<select class="f" style="padding:6px;font-size:13px" onchange="slbErr(this)"><option></option>${it.ch.map(c=>`<option>${esc(c)}</option>`).join('')}</select>`;
+    return L+`<table><tr><th>条件</th>${(it.kind==='photo'||it.kind==='video')?'<th></th>':'<th style="width:26%">判定</th>'}${it.kind==='slb'?'<th style="width:24%">エラー</th>':''}<th style="width:22%"></th></tr>${it.rows.map(r=>`<tr data-kind="${it.kind}" data-side="${r[1]||''}" data-key="${esc(it.key+'|'+r[0])}"><td style="font-size:12px">${esc(r[0])}<div class="why"></div></td><td>${(it.kind==='photo'||it.kind==='video')?'<div class="ph"></div>':it.kind==='slb'?`<div style="font-size:11px">右 ${sc.replace('<select','<select data-dir="右"')}</div><div style="font-size:11px;margin-top:4px">左 ${sc.replace('<select','<select data-dir="左"')}</div>`:sc}</td>${it.kind==='slb'?'<td class="err" style="font-size:12px"></td>':''}<td><button class="btn sm" style="white-space:nowrap" onclick="recOpen(this)">撮影</button></td></tr>`).join('')}</table>`;
+  }
+  if(it.t==='menu'){ MENU_ST=it.opts; return `<div class="menu">${exHtml()+exHtml()+exHtml()}</div><button class="btn sm" style="margin-top:6px" onclick="addEx(this)">＋ 種目を足す</button>`; }
+  return '';
+}
+
+// ===== 骨格トラッキング(MediaPipe Pose をブラウザ内で実行) =====
+const MP='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+const MODEL='https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
+let landmarker=null, MPmod=null, trackRaf=null, lastTs=0;
+function nextTs(){ lastTs=Math.max(lastTs+1,performance.now()); return lastTs; }
+async function getLandmarker(){
+  if(landmarker) return landmarker;
+  MPmod = await import(MP+'/vision_bundle.mjs');
+  const fs = await MPmod.FilesetResolver.forVisionTasks(MP+'/wasm');
+  landmarker = await MPmod.PoseLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:MODEL,delegate:'GPU'},runningMode:'VIDEO',numPoses:1});
+  return landmarker;
+}
+// 体の主な線だけ(顔の細かい点は描かない)
+const LINES=[[11,12],[11,23],[12,24],[23,24],[11,13],[13,15],[12,14],[14,16],[23,25],[25,27],[27,29],[29,31],[27,31],[24,26],[26,28],[28,30],[30,32],[28,32],[7,11],[8,12]];
+const PTS=[7,8,11,12,13,14,15,16,23,24,25,26,27,28,29,30,31,32];
+function drawPose(ctx,W,H,p){
+  if(!p) return;
+  const lw=Math.max(3,W/180);
+  ctx.lineWidth=lw; ctx.strokeStyle='rgba(30,90,200,.95)'; ctx.lineCap='round';
+  LINES.forEach(([a,b])=>{ if(p[a].visibility<.4||p[b].visibility<.4) return; ctx.beginPath(); ctx.moveTo(p[a].x*W,p[a].y*H); ctx.lineTo(p[b].x*W,p[b].y*H); ctx.stroke(); });
+  ctx.fillStyle='#3fd25a';
+  PTS.forEach(i=>{ if(p[i].visibility<.4) return; ctx.beginPath(); ctx.arc(p[i].x*W,p[i].y*H,lw*1.2,0,7); ctx.fill(); });
+}
+async function openTrack(url){
+  const m=document.getElementById('trk'), v=document.getElementById('trkV'), c=document.getElementById('trkC'), st=document.getElementById('trkS');
+  m.classList.add('on'); v.src=url; st.textContent='骨格を読み込み中…';
+  let lm; try{ lm=await getLandmarker() }catch(e){ st.textContent='読み込みに失敗しました(ネット接続が必要です)'; return }
+  st.textContent='';
+  const ctx=c.getContext('2d');
+  let last=-1;
+  const draw=()=>{
+    if(!m.classList.contains('on')) return;
+    if(v.readyState>=2 && v.currentTime!==last){
+      last=v.currentTime;
+      c.width=v.videoWidth; c.height=v.videoHeight;
+      const r=lm.detectForVideo(v, nextTs());
+      ctx.clearRect(0,0,c.width,c.height);
+      drawPose(ctx,c.width,c.height,r.landmarks&&r.landmarks[0]);
+    }
+    trackRaf=requestAnimationFrame(draw);
+  };
+  v.onloadeddata=()=>{ v.play(); };
+  cancelAnimationFrame(trackRaf); draw();
+}
+
+// ===== 自動判定 =====
+function slbErr(sel){
+  const tr=sel.closest('tr'), e=tr.querySelector('.err'); if(!e) return;
+  const eye=tr.dataset.side==='eye', opp={右:'左',左:'右'};
+  const out=[...tr.querySelectorAll('select')].filter(x=>x.value==='揺れる').map(x=>(eye?opp[x.dataset.dir]:x.dataset.dir)+'の前庭覚エラー');
+  const any=[...tr.querySelectorAll('select')].some(x=>x.value);
+  e.textContent = out.length ? out.join('・') : (any?'なし':'');
+}
+// 動画を1コマずつ送って骨格を取る(1秒20コマ)
+// 判定用は1コマずつ独立に読む(前の動画の姿勢を引きずらない)
+let imgLandmarker=null;
+async function getImgLandmarker(){
+  if(imgLandmarker) return imgLandmarker;
+  await getLandmarker();
+  const fs=await MPmod.FilesetResolver.forVisionTasks(MP+'/wasm');
+  imgLandmarker=await MPmod.PoseLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:MODEL,delegate:'GPU'},runningMode:'IMAGE',numPoses:1});
+  return imgLandmarker;
+}
+async function poseSeries(file, onp){
+  const lm=await getImgLandmarker();
+  const v=document.createElement('video'); v.muted=true; v.playsInline=true; v.crossOrigin='anonymous';
+  v.src=typeof file==='string'?file:URL.createObjectURL(file);
+  await new Promise((ok,ng)=>{v.onloadeddata=ok; v.onerror=()=>ng(new Error('動画を開けません'));});
+  if(!isFinite(v.duration)){ v.currentTime=1e9; await new Promise(r=>v.ontimeupdate=r); v.ontimeupdate=null; }
+  const out=[], step=1/20;
+  for(let t=0;t<v.duration;t+=step){
+    v.currentTime=t; await new Promise(r=>v.onseeked=r);
+    const r=lm.detect(v);
+    out.push({t, p:r.landmarks&&r.landmarks[0]||null, ar:v.videoWidth/v.videoHeight});
+    if(onp) onp(t/v.duration);
+  }
+  return out;
+}
+function ang(a,b,c,ar){ // b を頂点とする角度(画面の縦横比を補正)
+  const x1=(a.x-b.x)*ar,y1=a.y-b.y,x2=(c.x-b.x)*ar,y2=c.y-b.y;
+  return Math.acos(Math.max(-1,Math.min(1,(x1*x2+y1*y2)/Math.hypot(x1,y1)/Math.hypot(x2,y2))))*180/Math.PI;
+}
+const med=a=>{const b=[...a].sort((x,y)=>x-y);return b[Math.floor(b.length/2)]};
+function judgeSquat(S){
+  // カメラ側の脚(見えている方)を使う
+  const vis=i=>S.reduce((s,f)=>s+(f.p?f.p[i].visibility:0),0);
+  const L=vis(23)+vis(25)+vis(27) >= vis(24)+vis(26)+vis(28);
+  const [sh,hp,kn,an,ft]=L?[11,23,25,27,31]:[12,24,26,28,32];
+  const F=S.filter(f=>f.p);
+  if(F.length<10) return {v:'',why:'体が映っていません'};
+  const ser={股関節:F.map(f=>ang(f.p[sh],f.p[hp],f.p[kn],f.ar)), 膝:F.map(f=>ang(f.p[hp],f.p[kn],f.p[an],f.ar)), 足首:F.map(f=>ang(f.p[kn],f.p[an],f.p[ft],f.ar))};
+  const TH=8, start={};
+  for(const k in ser){
+    const base=med(ser[k].slice(0,6)); const a=ser[k];
+    start[k]=null;
+    for(let i=0;i<a.length-2;i++) if([0,1,2].every(j=>Math.abs(a[i+j]-base)>TH)){ start[k]=F[i].t; break; }
+  }
+  const got=Object.entries(start).filter(e=>e[1]!=null).sort((a,b)=>a[1]-b[1]);
+  if(!got.length) return {v:'',why:'しゃがむ動きが見つかりません'};
+  const why=got.map(([k,t])=>`${k} ${t.toFixed(2)}秒`).join(' / ');
+  if(got[0][1]<0.4) return {v:'',why:'動き始めが映っていません。立って止まった状態から撮り始めてください'};
+  if(got.length>1 && got[1][1]-got[0][1]<=0.05) return {v:'同時',why};
+  return {v:got[0][0]+'から',why};
+}
+function judgeNeck(S){
+  // 横から: 顎(口の中点で代用)の前後位置が肩の前後位置にそろうか
+  const F=S.filter(f=>f.p); if(F.length<10) return {v:'',why:'体が映っていません'};
+  const g=f=>{const p=f.p; const mx=(p[9].x+p[10].x)/2, sx=(p[11].x+p[12].x)/2, ex=(p[7].x+p[8].x)/2; return {d:Math.abs(mx-sx), s:Math.abs(p[0].x-ex)};};
+  const scale=med(F.slice(0,6).map(f=>g(f).s))||0.02;
+  const best=Math.min(...F.map(f=>g(f).d));
+  const r=best/scale;
+  return {v: r<0.35?'OK':'NG', why:`顎と肩のずれ ${r.toFixed(2)}(0.35未満でOK)`};
+}
+function judgeSLB(S, mode){
+  // 正面から: 片脚で立っている間を「右」「左」に分け、それぞれ腰の中心の左右の揺れ(肩幅に対する割合)を出す
+  const F=S.filter(f=>f.p); if(F.length<10) return {why:'体が映っていません'};
+  const H=f=>Math.abs(((f.p[11].y+f.p[12].y)/2)-((f.p[27].y+f.p[28].y)/2));
+  const up=F.filter(f=>Math.abs(f.p[27].y-f.p[28].y)>0.06*H(f));
+  if(up.length<20) return {why:'片脚で立っている場面が見つかりません'};
+  const sw=med(up.map(f=>Math.abs(f.p[11].x-f.p[12].x)));
+  if(sw<0.04) return {why:'肩幅が映っていません。正面から撮ってください'};
+  let g;
+  if(mode==='head'){ // 顔の向き: 鼻が両耳の中点からどちらにずれたか(本人の右 = 画面の左)
+    const yaw=f=>(f.p[0].x-(f.p[7].x+f.p[8].x)/2)/Math.max(0.005,Math.abs(f.p[7].x-f.p[8].x));
+    g={右:up.filter(f=>yaw(f)<-0.2), 左:up.filter(f=>yaw(f)>0.2)};
+  }else{ // 眼球は取れないので時間で半分ずつ
+    const h=Math.floor(up.length/2); g={右:up.slice(0,h), 左:up.slice(h)};
+  }
+  const res={}, why=[];
+  for(const d of ['右','左']){
+    if(g[d].length<10){ why.push(`${d}: 場面が短すぎます`); continue; }
+    const xs=g[d].map(f=>(f.p[23].x+f.p[24].x)/2).sort((a,b)=>a-b);
+    const sway=(xs[Math.floor(xs.length*.95)]-xs[Math.floor(xs.length*.05)])/sw;
+    res[d]=sway>0.15?'揺れる':'安定';
+    why.push(`${d}: 揺れ 肩幅の${Math.round(sway*100)}%`);
+  }
+  return {res, why: why.join(' / ')+'(15%超で揺れる)'};
+}
+// 撮ったもの(blob)を保存場所へ上げて、動画なら判定する
+async function handleCapture(tr, blob){
+  const key=tr.dataset.key, why=tr.querySelector('.why'), sel=tr.querySelector('select');
+  const isImg=blob.type.startsWith('image'), ext=isImg?'jpg':(blob.type.includes('mp4')?'mp4':(blob.type.includes('quicktime')?'mov':'webm'));
+  const path=`${cs.value}/${dt.value}/m${Date.now()}.${ext}`;
+  if(why) why.textContent='保存中…';
+  try{
+    const up=await media('upload',path);
+    const r=await fetch(up.signedUrl,{method:'PUT',headers:{'Content-Type':blob.type||'application/octet-stream','x-upsert':'true'},body:blob});
+    if(!r.ok) throw new Error('upload '+r.status);
+  }catch(e){ if(why) why.textContent='保存できませんでした: '+e.message; return; }
+  URLS[path]={u:URL.createObjectURL(blob),t:Date.now()};
+  CUR[key]={path,type:isImg?'image':'video',val:''};
+  showRowMedia(tr); await saveKarte();
+  if(isImg||tr.dataset.kind==='video'){ if(why) why.textContent=''; return; }
+  why.textContent='骨格を読み込み中…';
+  try{
+    const S=await poseSeries(blob,p=>why.textContent=`解析中 ${Math.round(p*100)}%`);
+    const r=tr.dataset.kind==='slb' ? judgeSLB(S,tr.dataset.side) : {squat:judgeSquat,neck:judgeNeck}[tr.dataset.kind](S);
+    if(r.res){ tr.querySelectorAll('select').forEach(x=>{ if(r.res[x.dataset.dir]) x.value=r.res[x.dataset.dir]; }); r.v=Object.keys(r.res).length?1:0; }
+    else if(r.v) sel.value=r.v;
+    slbErr(sel);
+    why.textContent=(r.v?'自動: ':'')+r.why;
+    CUR[key].val=[...tr.querySelectorAll('select')].map(x=>(x.dataset.dir?x.dataset.dir+' ':'')+x.value).filter(x=>x.trim()).join(' / ');
+    await saveKarte();
+  }catch(e){ why.textContent='判定できませんでした: '+e.message; }
+}
+
+// ===== アプリ内カメラ(画質を落として撮る: 640x480 / 約0.9Mbps) =====
+let recTr=null, recStream=null, recFacing='environment', recMR=null, recChunks=[], recRaf=null;
+async function recOpen(btn){
+  recTr=btn.closest('tr'); const photo=recTr.dataset.kind==='photo';
+  document.getElementById('rec').classList.add('on');
+  document.getElementById('recGo').textContent=photo?'撮る':'録画開始';
+  document.getElementById('recFile').accept=photo?'image/*':'video/*';
+  await recStart();
+}
+async function recStart(){
+  recStop();
+  const st=document.getElementById('recS');
+  try{
+    recStream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:recFacing,width:{ideal:640},height:{ideal:480},frameRate:{ideal:30}}});
+  }catch(e){ st.textContent='カメラを開けませんでした。「ファイルから」を使ってください'; return; }
+  const v=document.getElementById('recV'); v.srcObject=recStream; await v.play().catch(()=>{});
+  st.textContent='';
+  // 撮っている間も骨格の線を重ねる
+  try{
+    const lm=await getLandmarker(), c=document.getElementById('recC'), ctx=c.getContext('2d');
+    const loop=()=>{ if(!recStream) return;
+      if(v.readyState>=2){ c.width=v.videoWidth; c.height=v.videoHeight; const r=lm.detectForVideo(v,nextTs()); ctx.clearRect(0,0,c.width,c.height); drawPose(ctx,c.width,c.height,r.landmarks&&r.landmarks[0]); }
+      recRaf=requestAnimationFrame(loop); };
+    loop();
+  }catch(e){}
+}
+function recStop(){ cancelAnimationFrame(recRaf); if(recMR&&recMR.state!=='inactive') recMR.stop(); recMR=null; if(recStream){ recStream.getTracks().forEach(t=>t.stop()); recStream=null; } const c=document.getElementById('recC'); c.getContext('2d').clearRect(0,0,c.width,c.height); }
+function recFlip(){ recFacing=recFacing==='environment'?'user':'environment'; recStart(); }
+function recClose(){ recStop(); document.getElementById('rec').classList.remove('on'); }
+async function recGo(){
+  const v=document.getElementById('recV'), btn=document.getElementById('recGo');
+  if(!recStream) return;
+  if(recTr.dataset.kind==='photo'){
+    const c=document.createElement('canvas'); c.width=v.videoWidth; c.height=v.videoHeight; c.getContext('2d').drawImage(v,0,0);
+    const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',0.85)); const tr=recTr; recClose(); handleCapture(tr,blob); return;
+  }
+  if(recMR&&recMR.state==='recording'){ recMR.stop(); return; }
+  const type=['video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(t=>window.MediaRecorder&&MediaRecorder.isTypeSupported(t))||'';
+  recChunks=[]; recMR=new MediaRecorder(recStream,{mimeType:type,videoBitsPerSecond:900000});
+  recMR.ondataavailable=e=>{ if(e.data.size) recChunks.push(e.data); };
+  recMR.onstop=()=>{ const blob=new Blob(recChunks,{type:(type||'video/webm').split(';')[0]}); const tr=recTr; recClose(); handleCapture(tr,blob); };
+  recMR.start(); btn.textContent='録画停止';
+}
+function recFromFile(inp){ const f=inp.files[0]; inp.value=''; if(!f) return; const tr=recTr; recClose(); handleCapture(tr,f); }
+function closeTrack(){ const m=document.getElementById('trk'),v=document.getElementById('trkV'); v.pause(); m.classList.remove('on'); cancelAnimationFrame(trackRaf); }
+let MENU_ST=[];
+const BLOCKS=['柔軟・感覚','ストレングス','ジャンプ'];
+const EXS={
+  上肢:[
+    'ベンチプレス','ダンベルプレス','インクラインベンチプレス','インクラインダンベルプレス','ダンベルフライ','ケーブルクロスオーバー','チェストプレス(マシン)','プッシュアップ','ニーリングプッシュアップ','ディップス',
+    'オーバーヘッドプレス','ダンベルショルダープレス','ランドマインプレス','アーノルドプレス','サイドレイズ','フロントレイズ','リアレイズ','フェイスプル','アップライトロウ',
+    'ラットプルダウン','チンニング','アシストチンニング','インバーテッドロウ','ケーブルロー','シーテッドロウ(マシン)','ワンハンドロー','ベントオーバーロウ','Tバーロウ','ストレートアームプルダウン','プルオーバー','シュラッグ',
+    'アームカール','ハンマーカール','トライセプスプレスダウン','トライセプスエクステンション','フレンチプレス','リストカール',
+    'エクスターナルローテーション','インターナルローテーション','Y-T-W','スキャプラプッシュアップ','ウォールスライド',
+    '胸のストレッチ','広背筋のストレッチ','肩後ろのストレッチ','スリーパーストレッチ','上腕三頭筋のストレッチ','手首・前腕のストレッチ'],
+  下肢:[
+    'スクワット','ゴブレットスクワット','フロントスクワット','ボックススクワット','スプリットスクワット','ブルガリアンスクワット','ランジ','リバースランジ','ウォーキングランジ','サイドランジ','ステップアップ','シングルレッグスクワット','ピストルスクワット',
+    'デッドリフト','RDL','シングルレッグRDL','スモウデッドリフト','トラップバーデッドリフト','グッドモーニング','ヒップスラスト','ヒップリフト','シングルレッグヒップリフト',
+    'レッグプレス','レッグエクステンション','レッグカール','ノルディックハムストリング','アダクション','アブダクション','クラムシェル','モンスターウォーク','カーフレイズ','シーテッドカーフレイズ','ティビアレイズ',
+    'ハムストリングのストレッチ','大腿四頭筋のストレッチ','腸腰筋のストレッチ','お尻のストレッチ(梨状筋)','内ももストレッチ','ふくらはぎのストレッチ','足首の背屈ドリル','90/90ヒップ','カエル足ストレッチ','ワールドグレイテストストレッチ'],
+  腹筋:[
+    '90/90呼吸','クロコダイル呼吸','デッドバグ','バードドッグ','プランク','サイドプランク','コペンハーゲンプランク','ベアクロール','ホロウボディ','アブローラー',
+    'クランチ','リバースクランチ','レッグレイズ','ハンギングレッグレイズ','ロシアンツイスト','パロフプレス','ケーブルチョップ','ケーブルリフト','スーツケースキャリー',
+    'ブリッジ','バックエクステンション','スーパーマン','キャットカウ','チャイルドポーズ','コブラ','オープンブック','胸椎回旋(四つ這い)'],
+  全身:[
+    'ケトルベルスイング','ケトルベルゴブレット','ターキッシュゲットアップ','ファーマーズキャリー','オーバーヘッドキャリー','スレッドプッシュ','スレッドプル',
+    'パワークリーン','ハングクリーン','スナッチ','プッシュプレス','スラスター','バーピー','マウンテンクライマー','ローリング','クロール(四つ這い移動)',
+    'ボックスジャンプ','スクワットジャンプ','カウンタームーブメントジャンプ','ブロードジャンプ','バウンディング','スキップ','ラテラルジャンプ','デプスジャンプ','縄跳び',
+    'メディシンボールスロー','メディシンボールスラム','ローテーショナルスロー',
+    '頚椎回旋ドリル','眼球運動ドリル','片脚バランス','ロッキング','全身のフォームローラー']
+};
+// 種目の候補(部位を選ぶとその部位だけ)
+function buildDatalists(){ document.querySelectorAll('datalist').forEach(d=>d.remove());
+document.body.insertAdjacentHTML('beforeend', Object.entries(EXS).map(([k,a])=>`<datalist id="dl-${k}">${a.map(x=>`<option value="${x}">`).join('')}</datalist>`).join('')+`<datalist id="dl-all">${Object.values(EXS).flat().map(x=>`<option value="${x}">`).join('')}</datalist>`); }
+buildDatalists();
+function exHtml(){
+  const opt=(a,ph)=>`<option value="">${ph}</option>`+a.map(o=>`<option>${esc(o)}</option>`).join('');
+  return `<div class="ex">
+    <div class="r1"><select class="f bk" onchange="sortEx(this)">${opt(BLOCKS,'ブロック')}</select><select class="f st" onchange="sortEx(this)">${opt(MENU_ST,'段階')}</select></div>
+    <div class="r1"><select class="f" onchange="this.nextElementSibling.setAttribute('list','dl-'+(this.value||'all'))">${opt(Object.keys(EXS),'部位')}</select><input type="text" list="dl-all" placeholder="種目(選ぶか打つ)"></div>
+    <div class="r2"><input placeholder="kg"><input placeholder="回"><input placeholder="set"><input placeholder="休憩"><input placeholder="RPE" title="きつさ 1〜10"></div>
+    <div class="r3"><select class="f" onchange="autoNext(this)">${opt(['できた','崩れた'],'結果')}</select><select class="f">${opt(['固有受容覚','前庭覚','触覚'],'感覚')}</select><select class="f">${opt(['エクスターナル','インターナル'],'フォーカス')}</select></div>
+    <div class="r1"><select class="f nx">${opt(['進める','据え置き','戻す'],'次回')}</select><select class="f">${opt(['ボリューム','重量','インターバル','頻度','可動域','安定性','動作の複雑さ'],'動かす変数(1つ)')}</select></div>
+  </div>`;
+}
+// 崩れたら次回は「戻す」を入れておく(手で直せる)
+function autoNext(sel){ const nx=sel.closest('.ex').querySelector('.nx'); if(sel.value==='崩れた' && !nx.value) nx.value='戻す'; }
+function addEx(b){ b.previousElementSibling.insertAdjacentHTML('beforeend',exHtml()); }
+// ブロックの順 → 段階の順に並べ替える(未選択は最後)
+function sortEx(sel){
+  const box=sel.closest('.menu');
+  const rank=e=>{const b=BLOCKS.indexOf(e.querySelector('.bk').value), t=MENU_ST.indexOf(e.querySelector('.st').value); return (b<0?99:b)*100+(t<0?99:t);};
+  [...box.children].sort((a,b)=>rank(a)-rank(b)).forEach(e=>box.appendChild(e));
+}
+function addRow(b){const t=b.previousElementSibling;t.insertAdjacentHTML('beforeend','<tr><td><input></td><td><input></td><td><input></td><td><input></td><td><input></td><td><input></td></tr>')}
+
+function itemWrap(c,it){ return `<div class="it" data-ik="${esc(c.name+'|'+it.label)}">${itemHtml(it)}</div>`; }
+function renderKarte(){
+  for(const pg of ['eval','train']){
+    let n=0;
+    document.getElementById('v-'+pg).innerHTML = cats.filter(c=>!c.hidden&&(c.page||'eval')===pg).map(c=>`
+      <div class="card cat">
+        <div class="cat-h" onclick="this.parentNode.classList.toggle('closed')"><span class="no">${++n}</span><h3>${esc(c.name)}</h3><span class="tog">▾</span></div>
+        <div class="cat-b">${c.hint?`<div class="hint">${esc(c.hint)}</div>`:''}${c.items.map(it=>itemWrap(c,it)).join('')}</div>
+      </div>`).join('') +
+      `<div style="text-align:center;margin:8px 0 20px"><button class="btn solid" onclick="saveKarte()">今すぐ保存</button></div>`;
+  }
+  document.getElementById('v-eval').insertAdjacentHTML('afterbegin',weightCard());
+  document.querySelectorAll('.view .chip').forEach(ch=>ch.onclick=()=>ch.classList.toggle('on'));
+}
+// ===== 体重(Private Lounge でお客さまが入れたもの) =====
+function weightCard(){
+  const W=WEIGHTS.filter(w=>w.date>=new Date(Date.now()-60*864e5).toISOString().slice(0,10));
+  if(!W.length) return `<div class="card wt"><div class="cat-h"><span class="no"></span><h3>体重</h3></div><p class="hint" style="margin-top:8px">まだ記録がありません(Private Lounge で寝る前・朝に入れてもらう)</p></div>`;
+  const ks=W.map(w=>+w.kg), lo=Math.min(...ks)-0.5, hi=Math.max(...ks)+0.5;
+  const days=[...new Set(W.map(w=>w.date))].sort(), x=d=>days.length<2?150:10+280*days.indexOf(d)/(days.length-1), y=k=>110-100*(k-lo)/(hi-lo);
+  const line=(slot,col)=>{const p=W.filter(w=>w.slot===slot).map(w=>`${x(w.date).toFixed(1)},${y(+w.kg).toFixed(1)}`); return p.length?`<polyline points="${p.join(' ')}" fill="none" stroke="${col}" stroke-width="2"/>`+p.map(q=>`<circle cx="${q.split(',')[0]}" cy="${q.split(',')[1]}" r="2.5" fill="${col}"/>`).join(''):'';};
+  const lastOf=slot=>{const a=W.filter(w=>w.slot===slot); return a.length?a[a.length-1]:null;};
+  const n=lastOf('night'), m=lastOf('morning');
+  return `<div class="card wt"><div class="cat-h"><span class="no"></span><h3>体重</h3><span class="tog">${lo+0.5}〜${hi-0.5}kg</span></div>
+    <svg viewBox="0 0 300 120" preserveAspectRatio="none">${line('night','#5b6fb5')}${line('morning','#c98a4b')}</svg>
+    <div class="lg"><span style="color:#5b6fb5">● 寝る前 ${n?`<b>${n.kg}kg</b>(${n.date.slice(5)})`:'—'}</span><span style="color:#c98a4b">● 朝 ${m?`<b>${m.kg}kg</b>(${m.date.slice(5)})`:'—'}</span></div></div>`;
+}
+// ===== 動画・写真の閲覧URL(1時間有効を使い回す) =====
+const URLS={};
+async function viewUrl(path){
+  const c=URLS[path]; if(c&&c.t>Date.now()-50*60e3) return c.u;
+  const {url}=await media('view',path); URLS[path]={u:url,t:Date.now()}; return url;
+}
+async function showRowMedia(tr){
+  const m=CUR[tr.dataset.key], td=tr.querySelector('td');
+  td.querySelector('.rv')?.remove(); const ph=tr.querySelector('.ph'); if(ph) ph.innerHTML='';
+  if(!m) return;
+  if(m.type==='image'){ const u=await viewUrl(m.path).catch(()=>null); if(u&&ph) ph.innerHTML=`<img src="${u}" style="width:80px;height:106px;object-fit:cover;border-radius:8px">`; return; }
+  td.insertAdjacentHTML('beforeend',`<div class="rv"><button class="btn sm" onclick="openTrackPath('${m.path}')">線つきで見る</button></div>`);
+}
+async function openTrackPath(p){ openTrack(await viewUrl(p)); }
+// 比較: 項目を1つ選ぶと、その項目を日付順に横に並べる
+async function renderCmp(){
+  try{ KARTES=await rpc('gtl_karte_list',{...auth(),p_cid:+cs.value})||KARTES; }catch(e){}
+  const list=KARTES.filter(x=>x.data&&x.data.media).map(x=>({date:x.date,media:x.data.media}));
+  const name=cs.options[cs.selectedIndex]?.text||'';
+  document.getElementById('cmpTitle').textContent=name+' の比較';
+  const keys=[...new Set(list.flatMap(x=>Object.keys(x.media)))];
+  const ks=document.getElementById('cmpKey'), keep=ks.value;
+  ks.innerHTML=keys.map(k=>`<option value="${esc(k)}">${esc(k.replace('|',' ・ '))}</option>`).join('');
+  if(keys.includes(keep)) ks.value=keep;
+  const k=ks.value, g=document.getElementById('cmpGrid');
+  if(!k){ g.innerHTML='<p class="hint" style="margin-top:10px">まだ撮ったものがありません。評価ページで撮ると、ここに日付順で並びます。</p>'; return; }
+  const items=list.filter(x=>x.media[k]);
+  const urls=await Promise.all(items.map(x=>viewUrl(x.media[k].path).catch(()=>'')));
+  g.innerHTML=items.map((x,i)=>{const m=x.media[k], u=urls[i];
+    return `<div class="cc"><div class="d">${esc(x.date)}</div>${m.type==='image'?`<img src="${u}">`:`<video src="${u}" muted playsinline controls crossorigin="anonymous"></video><button class="btn sm" onclick="openTrack('${u}')">線つきで見る</button>`}<div class="v">${esc(m.val||'')}</div></div>`}).join('');
+}
+function renderCatEdit(){
+  document.getElementById('catEdit').innerHTML = cats.map((c,i)=>`
+    <div class="ed ${c.hidden?'hidden':''}">
+      <input type="text" value="${esc(c.name)}" onchange="cats[${i}].name=this.value;save();renderKarte()">
+      <button class="btn sm" onclick="cats[${i}].page=(cats[${i}].page==='train'?'eval':'train');save();renderCatEdit();renderKarte()">${c.page==='train'?'トレ':'評価'}</button>
+      <button class="btn sm" onclick="mv(${i},-1)">↑</button>
+      <button class="btn sm" onclick="mv(${i},1)">↓</button>
+      <button class="btn sm" onclick="cats[${i}].hidden=!cats[${i}].hidden;save();renderCatEdit();renderKarte()">${c.hidden?'出す':'隠す'}</button>
+      <button class="btn sm" onclick="if(confirm('「'+cats[${i}].name+'」を消しますか'))delCat(${i})">×</button>
+    </div>
+    <div class="items">${c.items.map((it,j)=>`<div>・${esc(it.label)}<span style="opacity:.6">(${({text:'1行',area:'メモ',select:'選ぶ',chips:'複数選ぶ',media:'撮影',auto:'自動判定',stages:'段階表',menu:'メニュー',lr:'左右表',fms:'FMS表',sets:'種目表'})[it.t]})</span>
+      <button class="btn sm" onclick="cats[${i}].items.splice(${j},1);save();renderCatEdit()">×</button></div>`).join('')}
+      <button class="btn sm" onclick="addItem(${i})">＋ 項目</button></div>`).join('');
+}
+function mv(i,d){const j=i+d;if(j<0||j>=cats.length)return;[cats[i],cats[j]]=[cats[j],cats[i]];save();renderCatEdit();renderKarte()}
+function delCat(i){cats.splice(i,1);save();renderCatEdit();renderKarte()}
+function addCat(){const n=prompt('カテゴリの名前');if(!n)return;cats.push({page:'eval',name:n,hint:'',items:[{t:'area',label:'メモ'}]});save();renderCatEdit()}
+function addItem(i){
+  const label=prompt('項目の名前');if(!label)return;
+  const k=prompt('形式: 1=1行 / 2=メモ / 3=選ぶ / 4=複数選ぶ / 5=写真 / 6=動画','2');
+  const t={1:'text',2:'area',3:'select',4:'chips',5:'auto',6:'auto'}[k]||'area';
+  const it={t,label};if(t==='auto'){ it.kind=k==='5'?'photo':'video'; it.key=label; it.rows=[[label]]; it.ch=[]; }
+  if(t==='select'||t==='chips'){it.opts=(prompt('選択肢を「、」区切りで')||'').split(/[、,]/).map(s=>s.trim()).filter(Boolean)}
+  cats[i].items.push(it);save();renderCatEdit();renderKarte();
+}
+function resetCats(){if(!confirm('カテゴリを最初の形に戻しますか'))return;cats=clone(DEFAULT_CATS);save();renderCatEdit();renderKarte()}
+
+document.querySelector('[data-v=cat]').addEventListener('click',renderCatEdit);
+document.querySelector('[data-v=cmp]').addEventListener('click',renderCmp);
+renderKarte();
+doLogin(true);
+document.getElementById('lgPass').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+</script>
+</body>
+</html>
