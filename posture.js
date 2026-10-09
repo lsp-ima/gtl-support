@@ -1,7 +1,8 @@
 // 姿勢写真をそろえて並べるための処理(カルテの比較と Private Lounge の再生ページで共用)
 // 1) 背景の縦の線(壁の角・ドア枠)から写真の傾きを測って水平に直す。体は使わない
 // 2) 骨格からくるぶし・耳を取り、大きさと足元の位置をそろえて切り出す
-// 3) くるぶしから真上の基準線と、耳・肩・股関節・膝・くるぶしの点を重ねる
+// 3) 横向き: 踵骨の中心から真上の基準線と、後頭骨がそこからどれだけ前にずれているかを重ねる
+//    正面: 両足の中心から真上の線と、肩・骨盤の左右の傾き
 (function(){
   const OUT_W=450, OUT_H=800, BODY_PX=600, BASE_Y=740;
 
@@ -60,7 +61,9 @@
     const L = (p[7].visibility+p[11].visibility+p[23].visibility+p[25].visibility+p[27].visibility) >= (p[8].visibility+p[12].visibility+p[24].visibility+p[26].visibility+p[28].visibility);
     const pick = side ? (L?[7,11,23,25,27]:[8,12,24,26,28]) : null;
     const mid=(a,b)=>({x:(P(a).x+P(b).x)/2, y:(P(a).y+P(b).y)/2});
-    const ankle = side ? P(pick[4]) : mid(27,28);
+    // 踵骨の中心 ≒ 踵の後ろの点(29/30)と外くるぶし(27/28)の中間
+    const heelI = side ? (L?29:30) : null;
+    const ankle = side ? {x:(P(heelI).x+P(pick[4]).x)/2, y:P(pick[4]).y} : mid(27,28);
     const heelY = Math.max(P(29).y, P(30).y, P(31).y, P(32).y);
     const ear = side ? P(pick[0]) : mid(7,8);
     const s = BODY_PX / Math.max(40, heelY - ear.y);
@@ -68,12 +71,24 @@
     g.drawImage(c1, ox, oy, W*s, H*s);
     const T=q=>({x:q.x*s+ox, y:q.y*s+oy});
 
-    // 基準線(くるぶしから真上)と床の線
+    // 基準線(横向きは踵骨の中心、正面は両足の中心から真上)と床の線
     g.lineWidth=2; g.strokeStyle='rgba(185,92,80,.9)'; g.setLineDash([8,6]);
     g.beginPath(); g.moveTo(OUT_W/2,0); g.lineTo(OUT_W/2,OUT_H); g.stroke();
     g.beginPath(); g.moveTo(0,BASE_Y); g.lineTo(OUT_W,BASE_Y); g.stroke(); g.setLineDash([]);
+    if(side){
+      // 後頭骨は骨格の点にないので、耳と鼻から推定する(耳から、鼻と反対向きに鼻〜耳の0.85倍)
+      const e=P(pick[0]), n=P(0), occ=T({x:e.x-(n.x-e.x)*0.85, y:e.y-Math.abs(n.x-e.x)*0.1});
+      const fwd=Math.sign(n.x-e.x)||1, dx=(occ.x-OUT_W/2)*fwd, pct=dx/BODY_PX*100;
+      g.lineWidth=3; g.strokeStyle='rgba(201,138,75,.95)';
+      g.beginPath(); g.moveTo(OUT_W/2,occ.y); g.lineTo(occ.x,occ.y); g.stroke();
+      g.fillStyle='#c98a4b'; g.beginPath(); g.arc(occ.x,occ.y,8,0,7); g.fill();
+      g.fillStyle='rgba(0,0,0,.6)'; g.fillRect(8,8,OUT_W-16,40);
+      g.fillStyle='#fff'; g.font='bold 22px sans-serif';
+      g.fillText(Math.abs(pct)<0.5?'後頭骨は踵の真上':`後頭骨は踵より${dx>0?'前':'後ろ'}へ ${Math.abs(pct).toFixed(1)}%`,18,36);
+      return {canvas:out, tilt, found:true, side, occPct:pct};
+    }
     // 耳・肩・股関節・膝・くるぶし
-    const pts = side ? pick.map(i=>T(P(i))) : [[7,8],[11,12],[23,24],[25,26],[27,28]].map(([a,b])=>T(mid(a,b)));
+    const pts = [[7,8],[11,12],[23,24],[25,26],[27,28]].map(([a,b])=>T(mid(a,b)));
     g.lineWidth=3; g.strokeStyle='rgba(30,90,200,.95)';
     g.beginPath(); pts.forEach((q,i)=>i?g.lineTo(q.x,q.y):g.moveTo(q.x,q.y)); g.stroke();
     if(!side){ // 正面は肩と骨盤の左右の傾きも

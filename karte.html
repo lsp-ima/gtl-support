@@ -66,6 +66,9 @@ td input{width:100%;font-size:14px;padding:6px;border:1px solid var(--line);bord
 .cc .v{font-size:12px;text-align:center}
 .pz{width:100%;aspect-ratio:450/800;border-radius:10px;background:#f4efe7;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--ink-soft);overflow:hidden}
 .pz canvas{width:100%;height:100%;display:block}
+.exh{display:flex;justify-content:space-between;align-items:center}
+.grip{flex:1;touch-action:none;cursor:grab;user-select:none;font-size:12px;color:var(--ink-soft);padding:4px 6px;border-radius:8px;background:var(--gold-pale)}
+.ex.drag{opacity:.6;border-color:var(--gold);box-shadow:0 6px 18px rgba(96,74,44,.25)}
 .ex{border:1px solid var(--line);border-radius:12px;padding:8px;margin-top:8px;display:flex;flex-direction:column;gap:6px}
 .ex .r1{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .ex select.f option[value=""]{color:#999}
@@ -194,7 +197,7 @@ const DEFAULT_CATS = [
     {t:'chips',label:'感覚系',opts:['固有受容覚','前庭覚','触覚']},
     {t:'area',label:'見立て'}]},
   {page:'eval',name:'A:評価', hint:'進化の階層の仮説+感覚系+フェーズ判断', items:[{t:'area',label:'評価'}]},
-  {page:'train',name:'メニュー', hint:'種目ごとにブロックと段階を選ぶと、ブロック順→段階順(呼吸→体幹近位→寝て四肢分離→四つ這い→立位→競技特異)に並ぶ\n使える→強度を乗せる/使えない→レグレッションを低強度・高品質で\nきつさ = RPE(1〜10)', items:[
+  {page:'train',name:'メニュー', hint:'「≡」をつかんで上下に動かすと順番を変えられる。段階は 呼吸→体幹近位→寝て四肢分離→四つ這い→立位→競技特異\n使える→強度を乗せる/使えない→レグレッションを低強度・高品質で\nきつさ = RPE(1〜10)', items:[
     {t:'menu',label:'種目',opts:['呼吸・横隔膜','体幹の近位安定','寝た状態での四肢の分離','四つ這い・移行パターン','立位・二足','競技特異的パターン']}]},
   {page:'train',name:'P:次回', hint:'次回の介入・変数の調整・再評価のタイミング', items:[
     {t:'area',label:'次回やること'},
@@ -636,7 +639,8 @@ buildDatalists();
 function exHtml(){
   const opt=(a,ph)=>`<option value="">${ph}</option>`+a.map(o=>`<option>${esc(o)}</option>`).join('');
   return `<div class="ex">
-    <div class="r1"><select class="f bk" onchange="sortEx(this)">${opt(BLOCKS,'ブロック')}</select><select class="f st" onchange="sortEx(this)">${opt(MENU_ST,'段階')}</select></div>
+    <div class="exh"><span class="grip" onpointerdown="dragStart(event)">≡ つかんで移動</span><button class="btn sm" onclick="delEx(this)">削除</button></div>
+    <div class="r1"><select class="f bk">${opt(BLOCKS,'ブロック')}</select><select class="f st">${opt(MENU_ST,'段階')}</select></div>
     <div class="r1"><select class="f" onchange="this.nextElementSibling.setAttribute('list','dl-'+(this.value||'all'))">${opt(Object.keys(EXS),'部位')}</select><input type="text" list="dl-all" placeholder="種目(選ぶか打つ)"></div>
     <div class="r2"><input placeholder="kg"><input placeholder="回"><input placeholder="set"><input placeholder="休憩"><input placeholder="きつさ" title="RPE(きつさ 1〜10)"></div>
     <div class="r3"><select class="f" onchange="autoNext(this)">${opt(['できた','崩れた'],'結果')}</select><select class="f">${opt(['固有受容覚','前庭覚','触覚'],'感覚')}</select><select class="f">${opt(['エクスターナル','インターナル'],'フォーカス')}</select></div>
@@ -661,12 +665,21 @@ function copyPrevMenu(btn){
   queueSave(); setSt(`${prev.date} のメニューを写しました`);
 }
 function addEx(b){ b.previousElementSibling.insertAdjacentHTML('beforeend',exHtml()); }
-// ブロックの順 → 段階の順に並べ替える(未選択は最後)
-function sortEx(sel){
-  const box=sel.closest('.menu');
-  const rank=e=>{const b=BLOCKS.indexOf(e.querySelector('.bk').value), t=MENU_ST.indexOf(e.querySelector('.st').value); return (b<0?99:b)*100+(t<0?99:t);};
-  [...box.children].sort((a,b)=>rank(a)-rank(b)).forEach(e=>box.appendChild(e));
+// 指・マウスでつかんで並べ替える(つかめるのは「≡」の帯だけ。入力欄はそのまま触れる)
+let dragEl=null;
+function dragStart(e){
+  e.preventDefault(); dragEl=e.target.closest('.ex'); dragEl.classList.add('drag');
+  document.addEventListener('pointermove',dragMove); document.addEventListener('pointerup',dragEnd,{once:true});
 }
+function dragMove(e){
+  if(!dragEl) return;
+  const box=dragEl.parentNode, y=e.clientY;
+  const after=[...box.children].filter(x=>x!==dragEl).find(x=>{ const r=x.getBoundingClientRect(); return y < r.top+r.height/2; });
+  if(after) box.insertBefore(dragEl,after); else box.appendChild(dragEl);
+  if(y<60) window.scrollBy(0,-12); else if(y>innerHeight-90) window.scrollBy(0,12);
+}
+function dragEnd(){ document.removeEventListener('pointermove',dragMove); if(dragEl){ dragEl.classList.remove('drag'); dragEl=null; queueSave(); } }
+function delEx(btn){ const e=btn.closest('.ex'); if([...e.querySelectorAll('input,select')].some(x=>x.value) && !confirm('この種目を消しますか')) return; e.remove(); queueSave(); }
 function addRow(b){const t=b.previousElementSibling;t.insertAdjacentHTML('beforeend','<tr><td><input></td><td><input></td><td><input></td><td><input></td><td><input></td><td><input></td></tr>')}
 
 function itemWrap(c,it){ return `<div class="it" data-ik="${esc(c.name+'|'+it.label)}">${itemHtml(it)}</div>`; }
@@ -718,6 +731,7 @@ async function renderPostureCmp(items,k,urls){
   const g=document.getElementById('cmpGrid');
   g.innerHTML=rawToggle(true)+items.map((x,i)=>`<div class="cc"><div class="d">${esc(x.date)}</div><div class="pz" id="pz${i}">そろえています…</div><div class="v" id="pzv${i}"></div></div>`).join('');
   let lm; try{ lm=await getImgLandmarker(); }catch(e){ cmpRaw=true; return renderCmp(); }
+  document.getElementById('cmpTool').insertAdjacentHTML('afterbegin','<span class="hint" style="float:left;margin:0">赤の点線=踵骨の中心から真上 / %は踵〜耳の高さに対して</span>');
   for(let i=0;i<items.length;i++){
     const box=document.getElementById('pz'+i); if(!box) return;
     try{
