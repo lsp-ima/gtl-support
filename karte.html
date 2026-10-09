@@ -64,6 +64,8 @@ td input{width:100%;font-size:14px;padding:6px;border:1px solid var(--line);bord
 .cc .d{font-size:12px;color:var(--gold-deep)}
 .cc img,.cc video{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;background:#000}
 .cc .v{font-size:12px;text-align:center}
+.pz{width:100%;aspect-ratio:450/800;border-radius:10px;background:#f4efe7;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--ink-soft);overflow:hidden}
+.pz canvas{width:100%;height:100%;display:block}
 .ex{border:1px solid var(--line);border-radius:12px;padding:8px;margin-top:8px;display:flex;flex-direction:column;gap:6px}
 .ex .r1{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .ex select.f option[value=""]{color:#999}
@@ -120,6 +122,7 @@ td input{width:100%;font-size:14px;padding:6px;border:1px solid var(--line);bord
       <h3 id="cmpTitle"></h3>
       <label class="f">並べる項目</label>
       <select class="f" id="cmpKey" onchange="renderCmp()"></select>
+      <div id="cmpTool" style="text-align:right;margin-top:8px"></div>
       <div id="cmpGrid" class="cmp"></div>
     </div>
   </section>
@@ -166,6 +169,7 @@ td input{width:100%;font-size:14px;padding:6px;border:1px solid var(--line);bord
   <button data-v="cat">カテゴリ</button>
 </nav>
 
+<script src="posture.js"></script>
 <script>
 // 初期カテゴリ = 今村式トレーニング設計システム ①〜⑩
 // 項目の型: text / area / select / chips / sets
@@ -692,6 +696,22 @@ async function showRowMedia(tr){
   td.insertAdjacentHTML('beforeend',`<div class="rv" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" onclick="openTrackPath('${m.path}')">線つきで見る</button>${rj}</div>`);
 }
 async function openTrackPath(p){ openTrack(await viewUrl(p)); }
+// 姿勢は傾きを直し、大きさと足元をそろえ、基準線を重ねて並べる(posture.js)
+let cmpRaw=false;
+function rawToggle(on){ document.getElementById('cmpTool').innerHTML = on ? `<button class="btn sm" onclick="cmpRaw=!cmpRaw;renderCmp()">${cmpRaw?'そろえて見る':'元の写真'}</button>` : ''; return ''; }
+async function renderPostureCmp(items,k,urls){
+  const g=document.getElementById('cmpGrid');
+  g.innerHTML=rawToggle(true)+items.map((x,i)=>`<div class="cc"><div class="d">${esc(x.date)}</div><div class="pz" id="pz${i}">そろえています…</div><div class="v" id="pzv${i}"></div></div>`).join('');
+  let lm; try{ lm=await getImgLandmarker(); }catch(e){ cmpRaw=true; return renderCmp(); }
+  for(let i=0;i<items.length;i++){
+    const box=document.getElementById('pz'+i); if(!box) return;
+    try{
+      const r=await Posture.align(urls[i],lm);
+      box.innerHTML=''; box.appendChild(r.canvas);
+      document.getElementById('pzv'+i).textContent=(r.tilt?`傾き ${r.tilt>0?'右':'左'}に${Math.abs(r.tilt).toFixed(1)}°を補正`:'傾き補正なし')+(r.found?'':'・体が見つからず');
+    }catch(e){ box.textContent='開けませんでした'; }
+  }
+}
 // 比較: 項目を1つ選ぶと、その項目を日付順に横に並べる
 async function renderCmp(){
   try{ KARTES=await rpc('gtl_karte_list',{...auth(),p_cid:+cs.value})||KARTES; }catch(e){}
@@ -703,10 +723,11 @@ async function renderCmp(){
   ks.innerHTML=keys.map(k=>`<option value="${esc(k)}">${esc(k.replace('|',' ・ '))}</option>`).join('');
   if(keys.includes(keep)) ks.value=keep;
   const k=ks.value, g=document.getElementById('cmpGrid');
-  if(!k){ g.innerHTML='<p class="hint" style="margin-top:10px">まだ撮ったものがありません。評価ページで撮ると、ここに日付順で並びます。</p>'; return; }
+  if(!k){ rawToggle(false); g.innerHTML='<p class="hint" style="margin-top:10px">まだ撮ったものがありません。評価ページで撮ると、ここに日付順で並びます。</p>'; return; }
   const items=list.filter(x=>x.media[k]);
   const urls=await Promise.all(items.map(x=>viewUrl(x.media[k].path).catch(()=>'')));
-  g.innerHTML=items.map((x,i)=>{const m=x.media[k], u=urls[i];
+  if(k.startsWith('姿勢')&&!cmpRaw){ renderPostureCmp(items,k,urls); return; }
+  g.innerHTML=rawToggle(k.startsWith('姿勢'))+items.map((x,i)=>{const m=x.media[k], u=urls[i];
     return `<div class="cc"><div class="d">${esc(x.date)}</div>${m.type==='image'?`<img src="${u}">`:`<video src="${u}" muted playsinline controls crossorigin="anonymous"></video><button class="btn sm" onclick="openTrack('${u}')">線つきで見る</button>`}<div class="v">${esc(m.val||'')}</div></div>`}).join('');
 }
 function renderCatEdit(){
