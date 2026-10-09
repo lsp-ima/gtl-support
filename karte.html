@@ -68,6 +68,11 @@ td input{width:100%;font-size:14px;padding:6px;border:1px solid var(--line);bord
 .pz canvas{width:100%;height:100%;display:block}
 .exh{display:flex;justify-content:space-between;align-items:center}
 .grip{flex:1;touch-action:none;cursor:grab;user-select:none;font-size:12px;color:var(--ink-soft);padding:4px 6px;border-radius:8px;background:var(--gold-pale)}
+.menu.sorting .ex{padding:4px 8px;margin-top:4px}
+.menu.sorting .ex > :not(.exh){display:none}
+.menu.sorting .exh button{display:none}
+.menu.sorting .grip{font-size:14px;color:var(--ink);padding:8px}
+.menu.sorting .grip::after{content:attr(data-name);margin-left:8px;font-weight:600}
 .ex.drag{opacity:.6;border-color:var(--gold);box-shadow:0 6px 18px rgba(96,74,44,.25)}
 .ex{border:1px solid var(--line);border-radius:12px;padding:8px;margin-top:8px;display:flex;flex-direction:column;gap:6px}
 .ex .r1{display:grid;grid-template-columns:1fr 1fr;gap:6px}
@@ -668,8 +673,14 @@ function addEx(b){ b.previousElementSibling.insertAdjacentHTML('beforeend',exHtm
 // 指・マウスでつかんで並べ替える(つかめるのは「≡」の帯だけ。入力欄はそのまま触れる)
 let dragEl=null;
 function dragStart(e){
-  e.preventDefault(); dragEl=e.target.closest('.ex'); dragEl.classList.add('drag');
-  document.addEventListener('pointermove',dragMove); document.addEventListener('pointerup',dragEnd,{once:true});
+  e.preventDefault(); dragEl=e.target.closest('.ex');
+  const box=dragEl.parentNode, y0=dragEl.getBoundingClientRect().top;
+  // つかんでいる間は全種目を名前だけの1行にして、短い距離で入れ替えられるようにする
+  box.querySelectorAll('.ex').forEach(x=>{ const n=x.querySelector('input[type=text]').value||'(種目なし)'; x.querySelector('.grip').dataset.name=n; });
+  box.classList.add('sorting'); dragEl.classList.add('drag');
+  window.scrollBy(0, dragEl.getBoundingClientRect().top - y0);   // つかんだ枠が指の下に来るように
+  try{ e.target.setPointerCapture(e.pointerId); }catch(_){}
+  document.addEventListener('pointermove',dragMove); document.addEventListener('pointerup',dragEnd); document.addEventListener('pointercancel',dragEnd);
 }
 function dragMove(e){
   if(!dragEl) return;
@@ -678,7 +689,10 @@ function dragMove(e){
   if(after) box.insertBefore(dragEl,after); else box.appendChild(dragEl);
   if(y<60) window.scrollBy(0,-12); else if(y>innerHeight-90) window.scrollBy(0,12);
 }
-function dragEnd(){ document.removeEventListener('pointermove',dragMove); if(dragEl){ dragEl.classList.remove('drag'); dragEl=null; queueSave(); } }
+function dragEnd(){
+  document.removeEventListener('pointermove',dragMove); document.removeEventListener('pointerup',dragEnd); document.removeEventListener('pointercancel',dragEnd);
+  if(dragEl){ const box=dragEl.parentNode; box.classList.remove('sorting'); dragEl.classList.remove('drag'); dragEl.scrollIntoView({block:'center'}); dragEl=null; queueSave(); }
+}
 function delEx(btn){ const e=btn.closest('.ex'); if([...e.querySelectorAll('input,select')].some(x=>x.value) && !confirm('この種目を消しますか')) return; e.remove(); queueSave(); }
 function addRow(b){const t=b.previousElementSibling;t.insertAdjacentHTML('beforeend','<tr><td><input></td><td><input></td><td><input></td><td><input></td><td><input></td><td><input></td></tr>')}
 
@@ -731,7 +745,7 @@ async function renderPostureCmp(items,k,urls){
   const g=document.getElementById('cmpGrid');
   g.innerHTML=rawToggle(true)+items.map((x,i)=>`<div class="cc"><div class="d">${esc(x.date)}</div><div class="pz" id="pz${i}">そろえています…</div><div class="v" id="pzv${i}"></div></div>`).join('');
   let lm; try{ lm=await getImgLandmarker(); }catch(e){ cmpRaw=true; return renderCmp(); }
-  document.getElementById('cmpTool').insertAdjacentHTML('afterbegin','<span class="hint" style="float:left;margin:0">赤の点線=踵骨の中心から真上 / %は踵〜耳の高さに対して</span>');
+  document.getElementById('cmpTool').insertAdjacentHTML('afterbegin','<span class="hint" style="float:left;margin:0">赤の点線=踵の後ろから真上 / %は踵〜耳の高さに対して</span>');
   for(let i=0;i<items.length;i++){
     const box=document.getElementById('pz'+i); if(!box) return;
     try{
