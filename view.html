@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>動きを見る</title>
+<style>
+:root{--gold:#b3905f;--gold-light:#d9c4a3;--ink-soft:#b7ab99}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1c1814;color:#fff;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",-apple-system,sans-serif;min-height:100vh;padding:16px}
+.in{max-width:520px;margin:0 auto}
+.st{position:relative}
+video,img{width:100%;display:block;border-radius:12px;background:#000}
+canvas{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+.bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:13px;color:var(--ink-soft)}
+button{border:1px solid var(--gold);background:none;color:var(--gold-light);border-radius:999px;padding:6px 14px;font-size:13px;font-family:inherit;cursor:pointer}
+#row{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}
+.cc{flex:0 0 46%;text-align:center;font-size:12px;color:var(--ink-soft)}
+.cc canvas{position:static;width:100%;border-radius:10px;display:block;margin-top:4px}
+#msg{font-size:12px;color:var(--ink-soft);text-align:center;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="in">
+  <div class="bar"><span id="ttl"></span><button onclick="history.length>1?history.back():location.href='./'">もどる</button></div>
+  <div class="st" id="st"></div>
+  <div id="msg">読み込み中…</div>
+</div>
+<script src="posture.js"></script>
+<script>
+// Private Lounge と同じ合言葉で、カルテの姿勢・スクワットを1本見る(動画は骨格の線を重ねる)
+const SUPABASE_URL='https://mgzirvfpzewnkwnylezl.supabase.co';
+const SUPABASE_ANON_KEY='sb_publishable_HKRCi-vX7u_atr67uRqxJQ_4GkFZUEI';
+const MP='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+const MODEL='https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
+const LINES=[[11,12],[11,23],[12,24],[23,24],[11,13],[13,15],[12,14],[14,16],[23,25],[25,27],[27,29],[29,31],[27,31],[24,26],[26,28],[28,30],[30,32],[28,32],[7,11],[8,12]];
+const PTS=[7,8,11,12,13,14,15,16,23,24,25,26,27,28,29,30,31,32];
+const q=new URLSearchParams(location.search), path=q.get('p')||'', msg=document.getElementById('msg'), KEY=q.get('k');
+document.getElementById('ttl').textContent=(q.get('t')||'')+(q.get('d')?'　'+q.get('d'):'');
+function recall(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+const H={'apikey':SUPABASE_ANON_KEY,'Content-Type':'application/json'};
+async function viewUrl(p){
+  const res=await fetch(SUPABASE_URL+'/functions/v1/gtl-karte-media',{method:'POST',headers:H,body:JSON.stringify({p_name:recall('gtl_name'),p_pass:recall('gtl_pass'),action:'view',path:p})});
+  return res.ok ? (await res.json()).url : null;
+}
+// 姿勢を日付順に、傾きを直して大きさ・足元をそろえて並べる
+async function compare(){
+  const res=await fetch(SUPABASE_URL+'/rest/v1/rpc/gtl_karte_media_for',{method:'POST',headers:H,body:JSON.stringify({p_name:recall('gtl_name'),p_pass:recall('gtl_pass'),p_cid:+q.get('c')})});
+  const all=res.ok?await res.json():null;
+  if(!all){ msg.textContent='開けませんでした。Private Lounge からもう一度開いてください'; return; }
+  const list=all.filter(m=>m.key===KEY);
+  const st=document.getElementById('st'); st.innerHTML='<div id="row"></div>';
+  document.getElementById('row').innerHTML=list.map((m,i)=>`<div class="cc">${m.date.slice(5).replace('-','/')}${i===0&&list.length>1?'(初回)':''}<div id="pz${i}" style="aspect-ratio:450/800;background:#2a2521;border-radius:10px;margin-top:4px"></div><div id="pv${i}"></div></div>`).join('');
+  msg.textContent='そろえています…';
+  let lm;
+  try{
+    const M=await import(MP+'/vision_bundle.mjs'), fs=await M.FilesetResolver.forVisionTasks(MP+'/wasm');
+    const mk=d=>M.PoseLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:MODEL,delegate:d},runningMode:'IMAGE',numPoses:1});
+    try{ lm=await Promise.race([mk('GPU'),new Promise((_,n)=>setTimeout(()=>n(),20000))]); }catch(e){ lm=await mk('CPU'); }
+  }catch(e){ msg.textContent='読み込めませんでした'; return; }
+  for(let i=0;i<list.length;i++){
+    try{
+      const u=await viewUrl(list[i].path); const r=await Posture.align(u,lm);
+      const box=document.getElementById('pz'+i); box.replaceWith(r.canvas);
+      document.getElementById('pv'+i).textContent=r.tilt?`傾き${Math.abs(r.tilt).toFixed(1)}°を補正`:'';
+    }catch(e){}
+  }
+  msg.textContent='赤い点線: 踵の後ろから真上の線 / %は踵から耳までの高さに対する割合';
+}
+async function main(){
+  if(KEY) return compare();
+  const h=H;
+  const res=await fetch(SUPABASE_URL+'/functions/v1/gtl-karte-media',{method:'POST',headers:h,
+    body:JSON.stringify({p_name:recall('gtl_name'),p_pass:recall('gtl_pass'),action:'view',path})});
+  if(!res.ok){ msg.textContent='開けませんでした。Private Lounge からもう一度開いてください'; return; }
+  const {url}=await res.json(), st=document.getElementById('st');
+  if(/\.jpe?g$/i.test(path)){ st.innerHTML=`<img src="${url}">`; msg.textContent=''; return; }
+  st.innerHTML='<video id="v" playsinline muted controls loop crossorigin="anonymous"></video><canvas id="c"></canvas>';
+  const v=document.getElementById('v'), c=document.getElementById('c'), ctx=c.getContext('2d');
+  v.src=url; v.onloadeddata=()=>v.play().catch(()=>{});
+  msg.textContent='骨格の線を準備中…';
+  let lm;
+  try{
+    const M=await import(MP+'/vision_bundle.mjs');
+    const fs=await M.FilesetResolver.forVisionTasks(MP+'/wasm');
+    lm=await M.PoseLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:MODEL,delegate:'GPU'},runningMode:'VIDEO',numPoses:1});
+  }catch(e){ msg.textContent='線は出せませんでした(動画はそのまま見られます)'; return; }
+  msg.textContent='';
+  let last=-1, ts=0;
+  const draw=()=>{
+    if(v.readyState>=2 && v.currentTime!==last){
+      last=v.currentTime; c.width=v.videoWidth; c.height=v.videoHeight;
+      ts=Math.max(ts+1,performance.now());
+      const p=(lm.detectForVideo(v,ts).landmarks||[])[0];
+      ctx.clearRect(0,0,c.width,c.height);
+      if(p){
+        const W=c.width,H=c.height,lw=Math.max(3,W/180);
+        ctx.lineWidth=lw; ctx.strokeStyle='rgba(30,90,200,.95)'; ctx.lineCap='round';
+        LINES.forEach(([a,b])=>{ if(p[a].visibility<.4||p[b].visibility<.4) return; ctx.beginPath(); ctx.moveTo(p[a].x*W,p[a].y*H); ctx.lineTo(p[b].x*W,p[b].y*H); ctx.stroke(); });
+        ctx.fillStyle='#3fd25a';
+        PTS.forEach(i=>{ if(p[i].visibility<.4) return; ctx.beginPath(); ctx.arc(p[i].x*W,p[i].y*H,lw*1.2,0,7); ctx.fill(); });
+      }
+    }
+    requestAnimationFrame(draw);
+  };
+  draw();
+}
+main();
+</script>
+</body>
+</html>

@@ -518,6 +518,12 @@ body[data-tod="evening"] .house-shade{opacity:.35;background:linear-gradient(180
     <div id="noCust2" class="empty">お客様を選択してください</div>
     <div id="karteBody"></div>
   </div>
+  <div class="card" id="moveCard" style="display:none">
+    <h2 style="margin-bottom:6px">姿勢とスクワット</h2>
+    <div class="seg" id="segMove"></div>
+    <div id="moveList" style="display:flex;gap:10px;overflow-x:auto;margin-top:12px;padding-bottom:4px"></div>
+    <div id="moveCmp"></div>
+  </div>
   <div class="card" id="karteRecsCard" style="display:none">
     <h2>記録の履歴</h2>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
@@ -868,7 +874,7 @@ function enterApp(){
 }
 function logout(){
   remember('gtl_name', null); remember('gtl_pass', null);
-  SESSION={name:null,pass:null,role:null}; S={customers:[],articles:[],currentId:null};
+  SESSION={name:null,pass:null,role:null}; moveFor=null; weightFor=null; S={customers:[],articles:[],currentId:null};
   /* reloadが効かない環境(アプリ内プレビュー等)でも確実に閉じられるよう、先にUIを直接戻す */
   ['hdr','custbar','mainEl','navEl'].forEach(id=>document.getElementById(id).style.display='none');
   document.getElementById('login').style.display='flex';
@@ -1173,7 +1179,7 @@ function renderKarte(){
   const c=cur();
   const no=document.getElementById('noCust2'), body=document.getElementById('karteBody'),
         recCard=document.getElementById('karteRecsCard'), recs=document.getElementById('karteRecs');
-  if(!c){ no.style.display='block'; body.innerHTML=''; recCard.style.display='none'; return; }
+  if(!c){ no.style.display='block'; body.innerHTML=''; recCard.style.display='none'; document.getElementById('moveCard').style.display='none'; return; }
   no.style.display='none';
 
   const rs=c.records||[];
@@ -1214,6 +1220,7 @@ function renderKarte(){
   if(rs.length){
     recCard.style.display='block';
     renderKarteRecs();
+    loadMoves();
   } else recCard.style.display='none';
 }
 function renderKarteRecs(){
@@ -1657,6 +1664,33 @@ async function openCustModal(){
 }
 
 /* ---------- render all ---------- */
+/* ---------- 姿勢とスクワット(トレーナーがカルテで撮った画像・動画。判定は出さない) ---------- */
+const MOVE_KEYS=[['姿勢|正面','姿勢 正面'],['姿勢|側面','姿勢 側面'],['SQ|ディープスクワット','スクワット']];
+let MOVES=[], moveKey=null, moveFor=null;
+async function mediaView(path){
+  const headers={'apikey':SUPABASE_ANON_KEY,'Content-Type':'application/json'};
+  if(SUPABASE_ANON_KEY.startsWith('eyJ')) headers['Authorization']='Bearer '+SUPABASE_ANON_KEY;
+  const res=await fetch(SUPABASE_URL+'/functions/v1/gtl-karte-media',{method:'POST',headers,body:JSON.stringify({...auth(),action:'view',path})});
+  if(!res.ok) return null; return (await res.json()).url;
+}
+async function loadMoves(){
+  const c=cur(), card=document.getElementById('moveCard'); if(!c){ card.style.display='none'; return; }
+  if(moveFor!==c.id){ moveFor=c.id; MOVES=[]; try{ MOVES=await rpc('gtl_karte_media_for',{...auth(), p_cid:c.id})||[]; }catch(e){} }
+  const keys=MOVE_KEYS.filter(([k])=>MOVES.some(m=>m.key===k));
+  card.style.display=keys.length?'':'none'; if(!keys.length) return;
+  if(!keys.some(([k])=>k===moveKey)) moveKey=keys[0][0];
+  document.getElementById('segMove').innerHTML=keys.map(([k,l])=>`<button class="${k===moveKey?'on':''}" onclick="moveKey='${k}';loadMoves()">${l}</button>`).join('');
+  const cmpLink=moveKey.startsWith('姿勢')&&MOVES.filter(m=>m.key===moveKey).length>1
+    ? `<a class="btn gold small" style="display:inline-block;margin-top:10px;text-decoration:none" href="view.html?k=${encodeURIComponent(moveKey)}&c=${c.id}&t=${encodeURIComponent(MOVE_KEYS.find(([k])=>k===moveKey)[1])}">並べて見る(傾きと大きさをそろえる)</a>` : '';
+  const list=MOVES.filter(m=>m.key===moveKey).slice().reverse(), box=document.getElementById('moveList');
+  const title=MOVE_KEYS.find(([k])=>k===moveKey)[1];
+  box.innerHTML=list.map((m,i)=>`<a href="view.html?p=${encodeURIComponent(m.path)}&t=${encodeURIComponent(title)}&d=${m.date}" style="flex:0 0 42%;text-decoration:none;color:inherit">
+    <div style="font-size:12px;color:var(--gold-deep);margin-bottom:4px">${m.date.slice(5).replace('-','/')}${i===list.length-1&&list.length>1?'(初回)':''}</div>
+    <div id="mv${i}" style="aspect-ratio:3/4;border-radius:12px;background:#2a2521;display:flex;align-items:center;justify-content:center;color:#d9c4a3;font-size:13px;overflow:hidden">${m.type==='video'?'▶ 線つきで見る':''}</div></a>`).join('');
+  document.getElementById('moveCmp').innerHTML=cmpLink;
+  list.forEach(async(m,i)=>{ if(m.type!=='image') return; const u=await mediaView(m.path); const el=document.getElementById('mv'+i); if(u&&el) el.innerHTML=`<img src="${u}" style="width:100%;height:100%;object-fit:cover">`; });
+}
+
 /* ---------- 体重(寝る前・朝。入れたらすぐ保存。トレーナーのカルテに出る) ---------- */
 function weightDate(){ const d=new Date(); return new Date(d-d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
 let weightFor=null;
