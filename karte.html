@@ -194,7 +194,7 @@ const DEFAULT_CATS = [
     {t:'chips',label:'感覚系',opts:['固有受容覚','前庭覚','触覚']},
     {t:'area',label:'見立て'}]},
   {page:'eval',name:'A:評価', hint:'進化の階層の仮説+感覚系+フェーズ判断', items:[{t:'area',label:'評価'}]},
-  {page:'train',name:'メニュー', hint:'種目ごとにブロックと段階を選ぶと、ブロック順→段階順(呼吸→体幹近位→寝て四肢分離→四つ這い→立位→競技特異)に並ぶ\n使える→強度を乗せる/使えない→レグレッションを低強度・高品質で', items:[
+  {page:'train',name:'メニュー', hint:'種目ごとにブロックと段階を選ぶと、ブロック順→段階順(呼吸→体幹近位→寝て四肢分離→四つ這い→立位→競技特異)に並ぶ\n使える→強度を乗せる/使えない→レグレッションを低強度・高品質で\nきつさ = RPE(1〜10)', items:[
     {t:'menu',label:'種目',opts:['呼吸・横隔膜','体幹の近位安定','寝た状態での四肢の分離','四つ這い・移行パターン','立位・二足','競技特異的パターン']}]},
   {page:'train',name:'P:次回', hint:'次回の介入・変数の調整・再評価のタイミング', items:[
     {t:'area',label:'次回やること'},
@@ -369,7 +369,7 @@ function itemHtml(it){
     const sc=`<select class="f" style="padding:6px;font-size:13px" onchange="slbErr(this)"><option></option>${it.ch.map(c=>`<option>${esc(c)}</option>`).join('')}</select>`;
     return L+`<table><tr><th>条件</th>${(it.kind==='photo'||it.kind==='video')?'<th></th>':'<th style="width:26%">判定</th>'}${it.kind==='slb'?'<th style="width:24%">エラー</th>':''}<th style="width:22%"></th></tr>${it.rows.map(r=>`<tr data-kind="${it.kind}" data-side="${r[1]||''}" data-key="${esc(it.key+'|'+r[0])}"><td style="font-size:12px">${esc(r[0])}<div class="why"></div></td><td>${(it.kind==='photo'||it.kind==='video')?'<div class="ph"></div>':it.kind==='slb'?`<div style="font-size:11px">右 ${sc.replace('<select','<select data-dir="右"')}</div><div style="font-size:11px;margin-top:4px">左 ${sc.replace('<select','<select data-dir="左"')}</div>`:sc}</td>${it.kind==='slb'?'<td class="err" style="font-size:12px"></td>':''}<td><button class="btn sm" style="white-space:nowrap" onclick="recOpen(this)">撮影</button></td></tr>`).join('')}</table>`;
   }
-  if(it.t==='menu'){ MENU_ST=it.opts; return `<div class="menu">${exHtml()+exHtml()+exHtml()}</div><button class="btn sm" style="margin-top:6px" onclick="addEx(this)">＋ 種目を足す</button>`; }
+  if(it.t==='menu'){ MENU_ST=it.opts; return `<div style="text-align:right"><button class="btn sm" onclick="copyPrevMenu(this)">前回のメニューをコピー</button></div><div class="menu">${exHtml()+exHtml()+exHtml()}</div><button class="btn sm" style="margin-top:6px" onclick="addEx(this)">＋ 種目を足す</button>`; }
   return '';
 }
 
@@ -638,13 +638,28 @@ function exHtml(){
   return `<div class="ex">
     <div class="r1"><select class="f bk" onchange="sortEx(this)">${opt(BLOCKS,'ブロック')}</select><select class="f st" onchange="sortEx(this)">${opt(MENU_ST,'段階')}</select></div>
     <div class="r1"><select class="f" onchange="this.nextElementSibling.setAttribute('list','dl-'+(this.value||'all'))">${opt(Object.keys(EXS),'部位')}</select><input type="text" list="dl-all" placeholder="種目(選ぶか打つ)"></div>
-    <div class="r2"><input placeholder="kg"><input placeholder="回"><input placeholder="set"><input placeholder="休憩"><input placeholder="RPE" title="きつさ 1〜10"></div>
+    <div class="r2"><input placeholder="kg"><input placeholder="回"><input placeholder="set"><input placeholder="休憩"><input placeholder="きつさ" title="RPE(きつさ 1〜10)"></div>
     <div class="r3"><select class="f" onchange="autoNext(this)">${opt(['できた','崩れた'],'結果')}</select><select class="f">${opt(['固有受容覚','前庭覚','触覚'],'感覚')}</select><select class="f">${opt(['エクスターナル','インターナル'],'フォーカス')}</select></div>
     <div class="r1"><select class="f nx">${opt(['進める','据え置き','戻す'],'次回')}</select><select class="f">${opt(['ボリューム','重量','インターバル','頻度','可動域','安定性','動作の複雑さ'],'動かす変数(1つ)')}</select></div>
   </div>`;
 }
 // 崩れたら次回は「戻す」を入れておく(手で直せる)
 function autoNext(sel){ const nx=sel.closest('.ex').querySelector('.nx'); if(sel.value==='崩れた' && !nx.value) nx.value='戻す'; }
+// 前回(この日より前で一番新しいカルテ)のメニューを写す。きつさ・結果・次回・動かす変数は空にする
+function copyPrevMenu(btn){
+  const prev=KARTES.filter(k=>k.date<dt.value && k.data && (k.data.menu||[]).some(r=>r.some(v=>v))).sort((a,b)=>a.date<b.date?1:-1)[0];
+  if(!prev){ alert('この日より前のメニューがありません'); return; }
+  const box=btn.closest('.it').querySelector('.menu');
+  const filled=[...box.querySelectorAll('input,select')].some(x=>x.value);
+  if(filled && !confirm(`今のメニューを ${prev.date} のメニューで置き換えますか`)) return;
+  box.innerHTML='';
+  prev.data.menu.filter(r=>r.some(v=>v)).forEach(vals=>{
+    box.insertAdjacentHTML('beforeend',exHtml()); const e=box.lastElementChild;
+    [...e.querySelectorAll('input,select')].forEach((x,i)=>{ x.value=[8,9,12,13].includes(i)?'':(vals[i]??''); });
+    const part=e.querySelectorAll('.r1')[1].querySelector('select'); part.nextElementSibling.setAttribute('list','dl-'+(part.value||'all'));
+  });
+  queueSave(); setSt(`${prev.date} のメニューを写しました`);
+}
 function addEx(b){ b.previousElementSibling.insertAdjacentHTML('beforeend',exHtml()); }
 // ブロックの順 → 段階の順に並べ替える(未選択は最後)
 function sortEx(sel){
