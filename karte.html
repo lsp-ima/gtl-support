@@ -120,6 +120,16 @@ td input{width:100%;font-size:14px;padding:6px;border:1px solid var(--line);bord
   <input type="date" id="date">
 </div>
 <div class="link" id="saveSt"></div>
+<div id="trialBar" style="display:none;max-width:720px;margin:8px auto 0;padding:0 16px">
+  <div class="card" style="padding:10px 14px;margin:0;background:var(--gold-pale)">
+    <div class="hint" style="margin-bottom:6px">体験の人です。入会して本人が Private Lounge で登録したら、そのアカウントと紐付けると、この人のカルテ・写真・動画が本人のほうへ移ります。</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+      <select class="f" id="trialTo" style="flex:1;min-width:150px"></select>
+      <button class="btn sm solid" onclick="mergeTrial()">紐付け</button>
+      <button class="btn sm" style="border-color:var(--bad);color:var(--bad)" onclick="deleteTrial()">体験を消す</button>
+    </div>
+  </div>
+</div>
 
 <main>
 
@@ -279,8 +289,42 @@ async function addTrial(){
 }
 
 // お客さまを切り替えたら、その人のカルテ一覧と体重を読み直す
+function isTrial(c){ return !!c && (c.note||'').startsWith('体験'); }
+function curCust(){ return CUSTOMERS.find(x=>String(x.id)===cs.value); }
+function showTrialBar(){
+  const c=curCust(), bar=document.getElementById('trialBar');
+  bar.style.display=isTrial(c)?'':'none'; if(!isTrial(c)) return;
+  const to=CUSTOMERS.filter(x=>!isTrial(x)&&x.id!==c.id).sort((a,b)=>b.id-a.id);   // 新しく登録した人が上
+  document.getElementById('trialTo').innerHTML='<option value="">紐付ける本人のアカウント</option>'+to.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');
+}
+async function reloadCustomers(selectId){
+  const data=await rpc('gtl_bootstrap',auth()); CUSTOMERS=data.customers||[]; fillCustomers();
+  if(selectId) cs.value=selectId; await loadCustomer();
+}
+async function mergeTrial(){
+  const c=curCust(), to=document.getElementById('trialTo').value; if(!to){ alert('紐付ける本人のアカウントを選んでください'); return; }
+  const t=CUSTOMERS.find(x=>String(x.id)===to);
+  if(!confirm(`体験の「${c.name}」さんのカルテ・写真・動画を「${t.name}」さんへ移して、体験の登録を消します。よろしいですか`)) return;
+  clearTimeout(saveTimer); await saveKarte();
+  try{
+    const r=await rpc('gtl_trial_merge',{...auth(),p_from:c.id,p_to:+to});
+    if(r!=='ok') throw new Error(String(r).startsWith('conflict:')?`${r.slice(9)} のカルテが両方にあります`:r);
+    await reloadCustomers(to); setSt(`${t.name} さんに紐付けました`);
+  }catch(e){ alert('紐付けできませんでした: '+e.message); }
+}
+async function deleteTrial(){
+  const c=curCust();
+  if(!confirm(`体験の「${c.name}」さんのカルテ・写真・動画を全部消します。元に戻せません。よろしいですか`)) return;
+  clearTimeout(saveTimer);
+  try{
+    const res=await fetch(SUPABASE_URL+'/functions/v1/gtl-karte-media',{method:'POST',headers:hdrs(),body:JSON.stringify({...auth(),action:'delete_trial',cid:c.id})});
+    if(!res.ok) throw new Error((await res.json().catch(()=>({}))).error||res.status);
+    const r=await rpc('gtl_trial_delete',{...auth(),p_cid:c.id}); if(r!=='ok') throw new Error(r);
+    await reloadCustomers(); setSt(`${c.name} さんの体験の記録を消しました`);
+  }catch(e){ alert('消せませんでした: '+e.message); }
+}
 async function loadCustomer(){
-  remember('gtl_karte_cid',cs.value);
+  remember('gtl_karte_cid',cs.value); showTrialBar();
   setSt('読み込み中…');
   let boot;
   [KARTES,WEIGHTS,boot]=await Promise.all([rpc('gtl_karte_list',{...auth(),p_cid:+cs.value}),rpc('gtl_weight_list',{...auth(),p_cid:+cs.value}),rpc('gtl_bootstrap',auth()).catch(()=>null)]);
