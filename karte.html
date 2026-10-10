@@ -485,7 +485,7 @@ async function getLandmarker(){
 // 体の主な線だけ(顔の細かい点は描かない)
 const LINES=[[11,12],[11,23],[12,24],[23,24],[11,13],[13,15],[12,14],[14,16],[23,25],[25,27],[27,29],[29,31],[27,31],[24,26],[26,28],[28,30],[30,32],[28,32],[7,11],[8,12]];
 const PTS=[7,8,11,12,13,14,15,16,23,24,25,26,27,28,29,30,31,32];
-// 選んだ関節は赤で大きく、その関節につながる線も赤くする(線つき再生の下のボタン)
+// 選んだ関節の点だけ赤で大きくする。線の色は変えない(線つき再生の下のボタン)
 const JOINTS=[['肩',11,12],['肘',13,14],['手首',15,16],['股関節',23,24],['膝',25,26],['足首',27,28]];
 const HL=new Set(); let trkLast=-1;
 function renderJointBt(){
@@ -496,8 +496,8 @@ function drawPose(ctx,W,H,p){
   if(!p) return;
   const lw=Math.max(3,W/180);
   ctx.lineCap='round';
-  LINES.forEach(([a,b])=>{ if(p[a].visibility<.4||p[b].visibility<.4) return; const h=HL.has(a)||HL.has(b);
-    ctx.lineWidth=h?lw*1.8:lw; ctx.strokeStyle=h?'rgba(230,40,40,.95)':'rgba(30,90,200,.95)';
+  ctx.lineWidth=lw; ctx.strokeStyle='rgba(30,90,200,.95)';
+  LINES.forEach(([a,b])=>{ if(p[a].visibility<.4||p[b].visibility<.4) return;
     ctx.beginPath(); ctx.moveTo(p[a].x*W,p[a].y*H); ctx.lineTo(p[b].x*W,p[b].y*H); ctx.stroke(); });
   PTS.forEach(i=>{ if(p[i].visibility<.4) return; const h=HL.has(i); ctx.fillStyle=h?'#ff2a2a':'#3fd25a'; ctx.beginPath(); ctx.arc(p[i].x*W,p[i].y*H,lw*(h?2.4:1.2),0,7); ctx.fill(); });
 }
