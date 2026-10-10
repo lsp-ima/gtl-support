@@ -116,6 +116,7 @@ td input{width:100%;font-size:14px;padding:6px;border:1px solid var(--line);bord
 
 <div class="custbar">
   <select id="cust"></select>
+  <button class="btn sm" style="white-space:nowrap" onclick="addTrial()">＋体験</button>
   <input type="date" id="date">
 </div>
 <div class="link" id="saveSt"></div>
@@ -245,16 +246,38 @@ async function doLogin(auto){
     if(!data){ err.textContent='お名前か合言葉が違います'; return; }
     if(data.role!=='trainer'){ err.textContent='トレーナー専用のページです'; return; }
     SESSION={name,pass}; remember('gtl_name',name); remember('gtl_pass',pass);
-    CUSTOMERS=(data.customers||[]).filter(c=>c.active!==false);
+    CUSTOMERS=data.customers||[];
     const cfg=await rpc('gtl_karte_config_get',auth());
     if(cfg&&Array.isArray(cfg.cats)&&cfg.cats.length) cats=cfg.cats;
     if(cfg&&cfg.exercises) Object.assign(EXS,cfg.exercises), buildDatalists();
-    cs.innerHTML=CUSTOMERS.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+    fillCustomers();
     const last=recall('gtl_karte_cid'); if(last&&CUSTOMERS.some(c=>String(c.id)===last)) cs.value=last;
     document.getElementById('login').classList.add('off'); err.textContent='';
     await loadCustomer();
   }catch(e){ err.textContent='接続できませんでした。電波をご確認ください'; }
 }
+// お客さまの一覧: 利用中を上、停止中は(停止中)を付けて下。体験はメモが「体験」で始まる人
+function fillCustomers(){
+  const tag=c=>(c.active===false?'(停止中) ':'')+((c.note||'').startsWith('体験')?'(体験) ':'');
+  const list=[...CUSTOMERS].sort((a,b)=>(a.active===false)-(b.active===false)||a.id-b.id);
+  cs.innerHTML=list.map(c=>`<option value="${c.id}">${esc(tag(c)+c.name)}</option>`).join('');
+}
+// 体験の人を名前だけで登録する。合言葉は自動で作り本人には渡さない(入会したら Private Lounge で変える)
+async function addTrial(){
+  const name=(prompt('体験の人の名前')||'').trim(); if(!name) return;
+  const pass='t'+crypto.getRandomValues(new Uint32Array(3)).join('').slice(0,15);
+  try{
+    const r=await rpc('gtl_customer_add',{...auth(),p_cname:name,p_note:'体験 '+today(),p_cpass:pass});
+    if(r!=='ok') throw new Error(r||'rejected');
+    const data=await rpc('gtl_bootstrap',auth());
+    CUSTOMERS=data.customers||[];
+    const mine=CUSTOMERS.filter(c=>c.name===name).sort((a,b)=>b.id-a.id)[0];
+    fillCustomers(); if(mine) cs.value=mine.id;
+    dt.value=today(); await loadCustomer();
+    setSt(`${name} さんを体験で登録しました`);
+  }catch(e){ alert('登録できませんでした: '+e.message); }
+}
+
 // お客さまを切り替えたら、その人のカルテ一覧と体重を読み直す
 async function loadCustomer(){
   remember('gtl_karte_cid',cs.value);
