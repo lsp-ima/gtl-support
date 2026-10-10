@@ -66,7 +66,7 @@ async function compare(){
       document.getElementById('pv'+i).textContent=r.tilt?`傾き${Math.abs(r.tilt).toFixed(1)}°を補正`:'';
     }catch(e){}
   }
-  msg.textContent='赤い点線: 踵の後ろから真上の線 / %は踵から耳までの高さに対する割合';
+  msg.textContent='赤い点線: 踵の後ろから真上の線';
 }
 async function main(){
   if(KEY) return compare();

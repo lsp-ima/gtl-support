@@ -433,7 +433,7 @@ async function makeReport(){
   st.textContent='下書きを作っています…';
   const lm=await getImgLandmarker();
   for(const key of ['姿勢|側面','姿勢|正面']){ if(!m[key]) continue;
-    try{ const a=await Posture.align(await viewUrl(m[key].path),lm); imgs.push({name:key.replace('|','_'),canvas:a.canvas,note:a.occPct!=null?`後頭骨は踵の後ろの線より${a.occPct>0?'前':'後ろ'}へ${Math.abs(a.occPct).toFixed(1)}%(踵〜耳の高さに対して)`:''}); }catch(e){} }
+    try{ const a=await Posture.align(await viewUrl(m[key].path),lm); imgs.push({name:key.replace('|','_'),canvas:a.canvas,note:'赤い点線は踵の後ろから真上'}); }catch(e){} }
   if(m['SQ|ディープスクワット']){ try{ const s=await squatStill(m['SQ|ディープスクワット'].path); if(s) imgs.push({name:'スクワット',canvas:s,note:'一番深くしゃがんだ瞬間'}); }catch(e){} }
   const A=(collect().f['A:評価|評価']||[])[0]||'', P=(collect().f['P:次回|次回やること']||[])[0]||'';
   const phases=(r.phases||[]).filter(x=>x.some(v=>v)).map(x=>`- ${x[0]||'(期間未記入)'}: ${x[1]?'['+x[1]+'] ':''}${x[2]||''}`).join('\n');
@@ -463,7 +463,7 @@ ${A}`:''}
 
 # 添付画像
 ${imgs.map(i=>`- ${i.name}.png: ${i.note}`).join('\n')||'(なし)'}
-- 姿勢の写真の赤い点線は「踵の後ろから真上に引いた線」。オレンジの点は後頭骨。頭の後ろが踵の真上にあると、重力に対して体が効率よく荷重を分散しやすい
+- 姿勢の写真の赤い点線は「踵の後ろから真上に引いた線」。頭の後ろが踵の真上にあると、重力に対して体が効率よく荷重を分散しやすい
 
 # ロードマップ(この順番で体を変えていく)
 ${phases||'(未記入)'}
@@ -1002,7 +1002,7 @@ async function renderPostureCmp(items,k,urls){
   const g=document.getElementById('cmpGrid');
   g.innerHTML=rawToggle(true)+items.map((x,i)=>`<div class="cc"><div class="d">${esc(x.date)}</div><div class="pz" id="pz${i}">そろえています…</div><div class="v" id="pzv${i}"></div></div>`).join('');
   let lm; try{ lm=await getImgLandmarker(); }catch(e){ cmpRaw=true; return renderCmp(); }
-  document.getElementById('cmpTool').insertAdjacentHTML('afterbegin','<span class="hint" style="float:left;margin:0">赤の点線=踵の後ろから真上 / %は踵〜耳の高さに対して</span>');
+  document.getElementById('cmpTool').insertAdjacentHTML('afterbegin','<span class="hint" style="float:left;margin:0">赤の点線=踵の後ろから真上</span>');
   for(let i=0;i<items.length;i++){
     const box=document.getElementById('pz'+i); if(!box) return;
     try{

@@ -1,7 +1,7 @@
 // 姿勢写真をそろえて並べるための処理(カルテの比較と Private Lounge の再生ページで共用)
 // 1) 背景の縦の線(壁の角・ドア枠)から写真の傾きを測って水平に直す。体は使わない
 // 2) 骨格からくるぶし・耳を取り、大きさと足元の位置をそろえて切り出す
-// 3) 横向き: 踵の後ろから真上の基準線と、後頭骨がそこからどれだけ前にずれているかを重ねる
+// 3) 横向き: 踵の後ろから真上の基準線を重ねる(頭の位置はトレーナーが目で見る)
 //    正面: 両足の中心から真上の線と、肩・骨盤の左右の傾き
 (function(){
   const OUT_W=450, OUT_H=800, BODY_PX=600, BASE_Y=740;
@@ -75,16 +75,8 @@
     g.beginPath(); g.moveTo(OUT_W/2,0); g.lineTo(OUT_W/2,OUT_H); g.stroke();
     g.beginPath(); g.moveTo(0,BASE_Y); g.lineTo(OUT_W,BASE_Y); g.stroke(); g.setLineDash([]);
     if(side){
-      // 後頭骨は骨格の点にないので、耳と鼻から推定する(耳から、鼻と反対向きに鼻〜耳の0.85倍)
-      const e=P(pick[0]), n=P(0), occ=T({x:e.x-(n.x-e.x)*0.85, y:e.y-Math.abs(n.x-e.x)*0.1});
-      const fwd=Math.sign(n.x-e.x)||1, dx=(occ.x-OUT_W/2)*fwd, pct=dx/BODY_PX*100;
-      g.lineWidth=3; g.strokeStyle='rgba(201,138,75,.95)';
-      g.beginPath(); g.moveTo(OUT_W/2,occ.y); g.lineTo(occ.x,occ.y); g.stroke();
-      g.fillStyle='#c98a4b'; g.beginPath(); g.arc(occ.x,occ.y,8,0,7); g.fill();
-      g.fillStyle='rgba(0,0,0,.6)'; g.fillRect(8,8,OUT_W-16,40);
-      g.fillStyle='#fff'; g.font='bold 22px sans-serif';
-      g.fillText(Math.abs(pct)<0.5?'後頭骨は踵の真上':`後頭骨は踵より${dx>0?'前':'後ろ'}へ ${Math.abs(pct).toFixed(1)}%`,18,36);
-      return {canvas:out, tilt, found:true, side, occPct:pct};
+      // 横向きは踵の後ろからの線だけ。後頭骨の位置は自動推定が当てにならないので出さない(2026-10-10 本人指摘)
+      return {canvas:out, tilt, found:true, side};
     }
     // 耳・肩・股関節・膝・くるぶし
     const pts = [[7,8],[11,12],[23,24],[25,26],[27,28]].map(([a,b])=>T(mid(a,b)));
