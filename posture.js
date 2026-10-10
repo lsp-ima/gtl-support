@@ -96,5 +96,31 @@
     g.fillStyle='#3fd25a'; pts.forEach(q=>{ g.beginPath(); g.arc(q.x,q.y,6,0,7); g.fill(); });
     return {canvas:out, tilt, found:true, side};
   }
-  window.Posture={align};
+  // 1枚の画面(canvas)の傾き(度)。体の周りは除いて背景だけで測る。自信がなければ 0
+  function tiltOf(c, lm){
+    const p = lm ? (lm.detect(c).landmarks||[])[0] : null;
+    const t = estimateTilt(c, p && bbox(p, c.width, c.height));
+    return t.ok && Math.abs(t.deg)>=0.3 ? t.deg : 0;
+  }
+  // 回したときに四隅に黒が出ないように拡大する倍率
+  function fillScale(w,h,deg){ const a=Math.abs(deg)*Math.PI/180; return Math.cos(a)+Math.max(w/h,h/w)*Math.sin(a); }
+  // 写真を水平にした canvas を返す(切り出しや拡大はしない。四隅だけ少し拡大して埋める)
+  async function levelImage(url, lm){
+    const im=await loadImg(url), k=Math.min(1,1400/Math.max(im.naturalWidth,im.naturalHeight));
+    const W=Math.round(im.naturalWidth*k), H=Math.round(im.naturalHeight*k);
+    const small=toCanvas(im, Math.round(W*Math.min(1,900/Math.max(W,H))), Math.round(H*Math.min(1,900/Math.max(W,H))), 0);
+    const tilt=tiltOf(small, lm);
+    const c=document.createElement('canvas'); c.width=W; c.height=H; const g=c.getContext('2d');
+    g.translate(W/2,H/2); g.rotate(-tilt*Math.PI/180); const s=fillScale(W,H,tilt); g.scale(s,s); g.drawImage(im,-W/2,-H/2,W,H);
+    return {canvas:c, tilt};
+  }
+  // 再生中の動画を水平にする: 今のコマで傾きを測り、動画と線の入った箱(rotEl)ごと回す
+  function levelVideo(video, rotEl, lm){
+    const k=Math.min(1,640/Math.max(video.videoWidth,video.videoHeight));
+    const c=toCanvas(video, Math.round(video.videoWidth*k), Math.round(video.videoHeight*k), 0);
+    const tilt=tiltOf(c, lm);
+    rotEl.style.transform = tilt ? `rotate(${-tilt}deg) scale(${fillScale(video.videoWidth,video.videoHeight,tilt)})` : '';
+    return tilt;
+  }
+  window.Posture={align, tiltOf, levelImage, levelVideo};
 })();

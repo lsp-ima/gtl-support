@@ -101,7 +101,7 @@ td input{width:100%;font-size:14px;padding:6px;border:1px solid var(--line);bord
 #pv{display:none;position:fixed;inset:0;background:rgba(20,16,12,.96);z-index:105;padding:16px;overflow:auto}
 #pv.on{display:block}
 .pv-st{position:relative;width:fit-content;margin:0 auto}
-.pv-st img{display:block;max-width:100%;max-height:78vh;border-radius:12px}
+#pvImg{display:block;max-width:100%;max-height:78vh;border-radius:12px}
 .pv-st svg{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
 .jbt{margin-top:8px;display:flex;flex-direction:column;gap:6px;align-items:center}
 .jbt div{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:center}
@@ -112,6 +112,13 @@ td input{width:100%;font-size:14px;padding:6px;border:1px solid var(--line);bord
 #trk.on{display:block}
 .trk-in{max-width:520px;margin:0 auto}
 .trk-st{position:relative}
+.trk-clip{overflow:hidden;border-radius:12px;background:#000}
+.trk-rot{position:relative;transform-origin:center center}
+.trk-rot video{width:100%;display:block}
+.trk-rot canvas{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+.vctl{display:flex;gap:8px;align-items:center;margin-top:6px;color:#ddd;font-size:12px}
+.vctl button{border:1px solid #6b5e4e;background:none;color:#ddd;border-radius:999px;width:34px;height:30px;cursor:pointer}
+.vctl input{flex:1}
 .trk-st video{width:100%;display:block;border-radius:12px}
 .trk-st canvas{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
 .mock{background:var(--gold-pale);border:1px dashed var(--gold);border-radius:12px;padding:8px 12px;font-size:12px;color:var(--gold-deep);margin-bottom:12px}
@@ -186,14 +193,15 @@ td input{width:100%;font-size:14px;padding:6px;border:1px solid var(--line);bord
   </div>
 </div></div>
 <div id="trk"><div class="trk-in">
-  <div class="trk-st"><video id="trkV" playsinline muted controls loop crossorigin="anonymous"></video><canvas id="trkC"></canvas></div>
+  <div class="trk-clip"><div class="trk-rot" id="trkRot"><video id="trkV" playsinline muted loop crossorigin="anonymous"></video><canvas id="trkC"></canvas></div></div>
+  <div class="vctl"><button id="trkPlay" onclick="trkToggle()">❚❚</button><input type="range" id="trkSeek" min="0" max="1000" value="0" oninput="trkSeekTo(this.value)"><span id="trkTime"></span></div>
   <div id="trkS" class="hint" style="color:#ddd;text-align:center;margin-top:6px"></div>
   <div id="jointBt" class="jbt"></div>
   <div style="text-align:center;margin-top:8px"><button class="btn" onclick="closeTrack()">閉じる</button></div>
 </div></div>
 <div id="pv"><div class="trk-in">
-  <div class="pv-st" id="pvSt"><img id="pvImg" crossorigin="anonymous"><svg id="pvSvg"></svg></div>
-  <div class="hint" style="color:#ddd;text-align:center;margin-top:6px">写真を押すと縦の線を引けます。線はつかんで左右に動かせます</div>
+  <div class="pv-st" id="pvSt"><canvas id="pvImg"></canvas><svg id="pvSvg"></svg></div>
+  <div class="hint" id="pvNote" style="color:#ddd;text-align:center;margin-top:6px"></div>
   <div class="rec-bt"><button class="btn" onclick="pvUndo()">1本戻す</button><button class="btn" onclick="pvClear()">全部消す</button><button class="btn" onclick="pvClose()">閉じる</button></div>
 </div></div>
 
@@ -503,7 +511,7 @@ function drawPose(ctx,W,H,p){
 }
 async function openTrack(url){
   const m=document.getElementById('trk'), v=document.getElementById('trkV'), c=document.getElementById('trkC'), st=document.getElementById('trkS');
-  m.classList.add('on'); v.src=url; st.textContent='骨格を読み込み中…';
+  m.classList.add('on'); document.getElementById('trkRot').style.transform=''; v.src=url; st.textContent='骨格を読み込み中…';
   let lm; try{ lm=await getLandmarker() }catch(e){ st.textContent='読み込みに失敗しました(ネット接続が必要です)'; return }
   st.textContent='';
   const ctx=c.getContext('2d');
@@ -519,7 +527,11 @@ async function openTrack(url){
     }
     trackRaf=requestAnimationFrame(draw);
   };
-  v.onloadeddata=()=>{ v.play(); };
+  const level=async()=>{ try{ const t=Posture.levelVideo(v, document.getElementById('trkRot'), await getImgLandmarker()); st.textContent=t?`傾き ${Math.abs(t).toFixed(1)}° を水平に補正`:''; }catch(e){} };
+  v.onloadeddata=()=>{ v.play(); setTimeout(level,300); };
+  if(v.readyState>=2) setTimeout(level,300);
+  v.ontimeupdate=()=>{ if(v.duration){ document.getElementById('trkSeek').value=Math.round(v.currentTime/v.duration*1000); document.getElementById('trkTime').textContent=`${v.currentTime.toFixed(1)} / ${v.duration.toFixed(1)}秒`; } };
+  v.onplay=v.onpause=()=>{ document.getElementById('trkPlay').textContent=v.paused?'▶':'❚❚'; };
   cancelAnimationFrame(trackRaf); draw();
 }
 
@@ -701,6 +713,8 @@ async function recGo(){
   recMR.start(); btn.textContent='録画停止';
 }
 function recFromFile(inp){ const f=inp.files[0]; inp.value=''; if(!f) return; const tr=recTr; recClose(); handleCapture(tr,f); }
+function trkToggle(){ const v=document.getElementById('trkV'); v.paused?v.play():v.pause(); }
+function trkSeekTo(x){ const v=document.getElementById('trkV'); if(v.duration){ v.pause(); v.currentTime=x/1000*v.duration; } }
 function closeTrack(){ const m=document.getElementById('trk'),v=document.getElementById('trkV'); v.pause(); m.classList.remove('on'); cancelAnimationFrame(trackRaf); }
 let MENU_ST=[];
 const BLOCKS=['柔軟・感覚','ストレングス','ジャンプ'];
@@ -831,8 +845,15 @@ async function showRowMedia(tr){
 // ===== 姿勢の写真を大きく見る。押した所に縦の線(垂線)を引き、つかんで動かせる =====
 let pvLines=[], pvDrag=-1;
 async function pvOpen(path){
-  const u=await viewUrl(path); pvLines=[]; const img=document.getElementById('pvImg');
-  img.onload=pvDraw; img.src=u; document.getElementById('pv').classList.add('on');
+  const u=await viewUrl(path); pvLines=[]; const cv=document.getElementById('pvImg');
+  document.getElementById('pv').classList.add('on'); cv.width=cv.width; pvDraw();
+  const note=document.getElementById('pvNote'); note.textContent='水平にしています…';
+  try{
+    const r=await Posture.levelImage(u, await getImgLandmarker().catch(()=>null));
+    cv.width=r.canvas.width; cv.height=r.canvas.height; cv.getContext('2d').drawImage(r.canvas,0,0);
+    note.textContent=(r.tilt?`傾き ${Math.abs(r.tilt).toFixed(1)}° を水平に補正。`:'')+'写真を押すと縦の線を引けます。線はつかんで左右に動かせます';
+  }catch(e){ note.textContent='開けませんでした'; }
+  pvDraw();
 }
 function pvClose(){ document.getElementById('pv').classList.remove('on'); }
 function pvUndo(){ pvLines.pop(); pvDraw(); }
