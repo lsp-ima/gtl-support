@@ -103,7 +103,7 @@
     const small=toCanvas(im, Math.round(W*Math.min(1,900/Math.max(W,H))), Math.round(H*Math.min(1,900/Math.max(W,H))), 0);
     const tilt=tiltOf(small, lm);
     const c=document.createElement('canvas'); c.width=W; c.height=H; const g=c.getContext('2d');
-    g.translate(W/2,H/2); g.rotate(-tilt*Math.PI/180); const s=fillScale(W,H,tilt); g.scale(s,s); g.drawImage(im,-W/2,-H/2,W,H);
+    g.translate(W/2,H/2); g.rotate(-tilt*Math.PI/180); const s=fillScale(W,H,tilt); g.scale(s,s); g.drawImage(im,-W/2,-H/2,W,H); g.setTransform(1,0,0,1,0,0);   // 後から描き足しやすいように戻す
     return {canvas:c, tilt};
   }
   // 再生中の動画を水平にする: 今のコマで傾きを測り、動画と線の入った箱(rotEl)ごと回す
