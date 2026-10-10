@@ -98,6 +98,13 @@ td input{width:100%;font-size:14px;padding:6px;border:1px solid var(--line);bord
 .wt svg{width:100%;height:120px;display:block}
 .wt .lg{display:flex;gap:14px;font-size:12px;color:var(--ink-soft);margin-top:4px}
 .wt .lg b{font-weight:600;color:var(--ink)}
+#rp{display:none;position:fixed;inset:0;background:rgba(20,16,12,.96);z-index:106;padding:16px;overflow:auto}
+#rp.on{display:block}
+.rpi{width:140px;text-align:center;color:#ddd;font-size:11px}
+.rpi canvas{width:100%;border-radius:8px;display:block;margin-bottom:4px}
+.rph{display:grid;grid-template-columns:24% 30% 1fr 20px;gap:4px;margin-top:6px}
+.rph input,.rph select{min-width:0;font-size:13px;padding:6px;border:1px solid var(--line);border-radius:8px;font-family:inherit;background:#fff}
+.rph button{border:none;background:none;color:var(--ink-soft);cursor:pointer}
 #pv{display:none;position:fixed;inset:0;background:rgba(20,16,12,.96);z-index:105;padding:16px;overflow:auto}
 #pv.on{display:block}
 .pv-st{position:relative;width:fit-content;margin:0 auto}
@@ -198,6 +205,13 @@ td input{width:100%;font-size:14px;padding:6px;border:1px solid var(--line);bord
   <div id="trkS" class="hint" style="color:#ddd;text-align:center;margin-top:6px"></div>
   <div id="jointBt" class="jbt"></div>
   <div style="text-align:center;margin-top:8px"><button class="btn" onclick="closeTrack()">閉じる</button></div>
+</div></div>
+<div id="rp"><div class="trk-in" style="max-width:640px">
+  <div style="color:#fff;font-size:15px;margin-bottom:8px">ChatGPT に渡す下書き</div>
+  <div class="hint" style="color:#ccc">1) 画像を保存 → 2) 指示文をコピー → 3) ChatGPT に画像と指示文を貼る → 4) できたPDFを送る前に今村さんが確認</div>
+  <div id="rpImgs" style="display:flex;gap:10px;flex-wrap:wrap;margin:10px 0"></div>
+  <textarea id="rpText" readonly style="width:100%;height:42vh;font-size:13px"></textarea>
+  <div class="rec-bt"><button class="btn solid" onclick="rpCopy()">指示文をコピー</button><button class="btn" onclick="document.getElementById('rp').classList.remove('on')">閉じる</button></div>
 </div></div>
 <div id="pv"><div class="trk-in">
   <div class="pv-st" id="pvSt"><canvas id="pvImg"></canvas><svg id="pvSvg"></svg></div>
@@ -366,6 +380,108 @@ function openDate(){
 }
 cs.onchange=loadCustomer; dt.onchange=openDate;
 
+// ===== 体験レポート(体験の人だけ)。今村さんがその場で走り書きし、清書は Claude が会話で行う。makeReport/squatStill は Claude がブラウザから呼んで画像を作る =====
+// 料金は https://ginza-training.com/menu/ の表示(2026-10-10 確認)
+const PLANS=['月額 週1回(月4回) 32,000円/月','月額 週2回 60,000円/月','月額 週3回 84,000円/月','回数券 3回 30,000円','回数券 5回 45,000円(1回9,000円)','回数券 8回 64,000円(1回8,000円)'];
+const OPTIONS=['食事指導(4回) 20,000円','整体(30分) 1回4,000円/3回9,000円','ラジオ波(20分) 1回3,000円/3回9,000円','オンライントレーニング(30分) 4回16,000円'];
+const STAGES=['呼吸・横隔膜','体幹の近位安定','寝た状態での四肢の分離','四つ這い・移行パターン','立位・二足','競技特異的パターン'];
+function phaseRow(v){ v=v||[]; const o=(a,ph,x)=>`<option value="">${ph}</option>`+a.map(s=>`<option ${s===x?'selected':''}>${esc(s)}</option>`).join('');
+  return `<div class="rph"><input placeholder="期間(例 1ヶ月目)" value="${esc(v[0]||'')}"><select>${o(STAGES,'段階',v[1])}</select><input placeholder="やること / 変わること" value="${esc(v[2]||'')}"><button onclick="this.parentNode.remove();queueSave()">×</button></div>`; }
+function reportCard(){
+  return `<div class="card" id="reportCard" style="border-color:var(--gold)"><div class="cat-h"><span class="no"></span><h3>体験レポート</h3></div>
+    <label class="f">目標(本人の言葉で)</label><textarea id="rpGoal"></textarea>
+    <label class="f">今の体について(お客さまに伝えたいこと)</label><textarea id="rpNow"></textarea>
+    <label class="f">通い方</label><div style="display:grid;grid-template-columns:1fr 34%;gap:6px"><select class="f" id="rpPlan"><option value="">プランを選ぶ</option>${PLANS.map(p=>`<option>${p}</option>`).join('')}</select><input type="text" id="rpTerm" placeholder="期間(例 3ヶ月)"></div>
+    <label class="f">ロードマップ(期間ごとに)</label><div id="rpPhases">${phaseRow()+phaseRow()+phaseRow()}</div>
+    <button class="btn sm" style="margin-top:6px" onclick="document.getElementById('rpPhases').insertAdjacentHTML('beforeend',phaseRow())">＋ 期間を足す</button>
+    <label class="f">オプション(すすめるもの)</label><div class="chips" id="rpOpts">${OPTIONS.map(o=>`<span class="chip">${o}</span>`).join('')}</div>
+    <div class="hint" style="margin-top:10px">単語や走り書きでOK。清書は Claude に「◯◯さんの体験レポート」と頼む</div></div>`;
+}
+function collectReport(){
+  if(!document.getElementById('reportCard')) return undefined;
+  return {goal:rpGoal.value, now:rpNow.value, plan:rpPlan.value, term:rpTerm.value,
+    phases:[...document.querySelectorAll('#rpPhases .rph')].map(r=>[...r.querySelectorAll('input,select')].map(x=>x.value)),
+    opts:[...document.querySelectorAll('#rpOpts .chip.on')].map(c=>c.textContent)};
+}
+function restoreReport(r){
+  if(!r||!document.getElementById('reportCard')) return;
+  rpGoal.value=r.goal||''; rpNow.value=r.now||''; rpPlan.value=r.plan||''; rpTerm.value=r.term||'';
+  if(r.phases&&r.phases.length) document.getElementById('rpPhases').innerHTML=r.phases.map(phaseRow).join('');
+  document.querySelectorAll('#rpOpts .chip').forEach(c=>c.classList.toggle('on',(r.opts||[]).includes(c.textContent)));
+}
+// スクワットの一番深いコマに骨格の線を重ね、水平にした画像
+async function squatStill(path){
+  const u=await viewUrl(path), S=await poseSeries(u), F=S.filter(f=>f.p);
+  if(!F.length) return null;
+  const knee=f=>{ const L=f.p[25].visibility>=f.p[26].visibility; return L?ang(f.p[23],f.p[25],f.p[27],f.ar):ang(f.p[24],f.p[26],f.p[28],f.ar); };
+  const deep=F.reduce((a,b)=>knee(b)<knee(a)?b:a);   // 膝が一番曲がったコマ(見えている側の膝)
+  const v=document.createElement('video'); v.muted=true; v.crossOrigin='anonymous'; v.src=u;
+  await new Promise(r=>v.onloadeddata=r); v.currentTime=deep.t; await new Promise(r=>v.onseeked=r);
+  const W=v.videoWidth, H=v.videoHeight, k=Math.min(1,1080/Math.max(W,H)), c=document.createElement('canvas'); c.width=Math.round(W*k); c.height=Math.round(H*k);
+  const tmp=document.createElement('canvas'); tmp.width=c.width; tmp.height=c.height; const tg=tmp.getContext('2d'); tg.drawImage(v,0,0,c.width,c.height); drawPose(tg,c.width,c.height,deep.p);
+  const tilt=Posture.tiltOf(tmp, await getImgLandmarker()), g=c.getContext('2d');
+  g.translate(c.width/2,c.height/2); g.rotate(-tilt*Math.PI/180); const a=Math.abs(tilt)*Math.PI/180, sc=Math.cos(a)+Math.max(c.width/c.height,c.height/c.width)*Math.sin(a); g.scale(sc,sc); g.drawImage(tmp,-c.width/2,-c.height/2);
+  return c;
+}
+async function makeReport(){
+  await saveKarte();
+  const c=curCust(), r=collectReport(), m=CUR, imgs=[], st=document.getElementById('saveSt');
+  st.textContent='下書きを作っています…';
+  const lm=await getImgLandmarker();
+  for(const key of ['姿勢|側面','姿勢|正面']){ if(!m[key]) continue;
+    try{ const a=await Posture.align(await viewUrl(m[key].path),lm); imgs.push({name:key.replace('|','_'),canvas:a.canvas,note:a.occPct!=null?`後頭骨は踵の後ろの線より${a.occPct>0?'前':'後ろ'}へ${Math.abs(a.occPct).toFixed(1)}%(踵〜耳の高さに対して)`:''}); }catch(e){} }
+  if(m['SQ|ディープスクワット']){ try{ const s=await squatStill(m['SQ|ディープスクワット'].path); if(s) imgs.push({name:'スクワット',canvas:s,note:'一番深くしゃがんだ瞬間'}); }catch(e){} }
+  const A=(collect().f['A:評価|評価']||[])[0]||'', P=(collect().f['P:次回|次回やること']||[])[0]||'';
+  const phases=(r.phases||[]).filter(x=>x.some(v=>v)).map(x=>`- ${x[0]||'(期間未記入)'}: ${x[1]?'['+x[1]+'] ':''}${x[2]||''}`).join('\n');
+  const text=`銀座トレーニングラボの体験に来たお客さまへ渡す「体験レポート」を、A4縦1〜2ページのPDFで作ってください。添付の画像を使います。
+
+# 目的
+体験で分かった「今の体」と、「この順番でこう体を変えていく」というロードマップを見せて、入会を考えてもらう。
+
+# 守ること
+- 話し言葉でやさしく。一人称は「私」(トレーナー 今村)。ポエム調・体言止めの連続・大げさな前置きは使わない
+- 効果を約束する言い方(必ず・確実に・◯kg痩せる・治る)は使わない。「〜を目指します」「〜を変えていきます」の言い方にする
+- 添付の写真は加工・描き直しをしない(線や数字はそのまま)。イラストは説明の補助と飾りにだけ使う
+- 実績の人数を盛る表現は使わない
+- 色は落ち着いた金(#b3905f)と濃い茶色(#2a2521)、背景はクリーム(#f4efe7)。ロゴ表記は「GINZA TRAINING LAB」
+- 料金・条件は下の通りに書き、書き換えない
+
+# お客さま
+${c?c.name:''} 様 / 体験日 ${dt.value}
+
+# 目標(本人の言葉)
+${r.goal||'(未記入)'}
+
+# 今の体について(トレーナーから)
+${r.now||'(未記入)'}
+${A?`(トレーナーのメモ。専門用語なので、そのまま載せずに意味が変わらない範囲でやさしく言い換える。自信がなければ載せない)
+${A}`:''}
+
+# 添付画像
+${imgs.map(i=>`- ${i.name}.png: ${i.note}`).join('\n')||'(なし)'}
+- 姿勢の写真の赤い点線は「踵の後ろから真上に引いた線」。オレンジの点は後頭骨。頭の後ろが踵の真上にあると、重力に対して体が効率よく荷重を分散しやすい
+
+# ロードマップ(この順番で体を変えていく)
+${phases||'(未記入)'}
+${P?`(次回やることのメモ: ${P})`:''}
+
+# 通い方・料金
+- おすすめの通い方: ${r.plan||'(未選択)'}${r.term?` × ${r.term}`:''}
+${(r.opts||[]).length?'- あわせておすすめ: '+r.opts.join(' / '):''}
+- 入会金 10,000円(税込)は、体験から1週間以内のご入会で0円
+- 体験料 5,500円は、7日以内のご入会で初月会費から差し引き
+
+# 最後に
+体験に来てくれたお礼と、「続けるかどうかは急がず考えてください」の一言で締める。`;
+  document.getElementById('rpText').value=text;
+  document.getElementById('rpImgs').innerHTML='';
+  imgs.forEach((i,n)=>{ const d=document.createElement('div'); d.className='rpi'; d.appendChild(i.canvas);
+    d.insertAdjacentHTML('beforeend',`<button class="btn sm" onclick="rpSave(${n})">画像を保存</button>`); document.getElementById('rpImgs').appendChild(d); });
+  window._rpImgs=imgs; document.getElementById('rp').classList.add('on'); st.textContent='下書きができました';
+}
+function rpSave(n){ const i=_rpImgs[n], nm=(curCust()?.name||'')+'_'+i.name+'.png'; i.canvas.toBlob(b=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=nm; a.click(); }); }
+async function rpCopy(){ const t=document.getElementById('rpText'); try{ await navigator.clipboard.writeText(t.value); }catch(e){ t.select(); document.execCommand('copy'); } setSt('指示文をコピーしました'); }
+
 // ===== Private Lounge の記録(お客さまが入れた睡眠・体の軽さ・きもち等) =====
 function fillPL(){
   const c=CUSTOMERS.find(x=>String(x.id)===cs.value), rs=(c&&c.records)||[];
@@ -398,10 +514,11 @@ function collect(){
     if(box.querySelector('.chip')){ f[ik]=chips; return; }
     f[ik]=[...box.querySelectorAll('input,select,textarea')].map(x=>x.value);
   });
-  return {f,auto,menu,media:CUR};
+  return {f,auto,menu,media:CUR,report:collectReport()};
 }
 function restore(d){
   if(!d) return;
+  restoreReport(d.report);
   document.querySelectorAll('.view .it').forEach(box=>{
     const ik=box.dataset.ik;
     if(box.querySelector('.menu')){
@@ -813,6 +930,7 @@ function renderKarte(){
       `<div style="text-align:center;margin:8px 0 20px"><button class="btn solid" onclick="saveKarte()">今すぐ保存</button></div>`;
   }
   document.getElementById('v-eval').insertAdjacentHTML('afterbegin',weightCard());
+  if(isTrial(curCust())) document.getElementById('v-eval').insertAdjacentHTML('afterbegin',reportCard());
   document.querySelectorAll('.view .chip').forEach(ch=>ch.onclick=()=>ch.classList.toggle('on'));
 }
 // ===== 体重(Private Lounge でお客さまが入れたもの) =====
