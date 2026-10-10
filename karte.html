@@ -98,6 +98,16 @@ td input{width:100%;font-size:14px;padding:6px;border:1px solid var(--line);bord
 .wt svg{width:100%;height:120px;display:block}
 .wt .lg{display:flex;gap:14px;font-size:12px;color:var(--ink-soft);margin-top:4px}
 .wt .lg b{font-weight:600;color:var(--ink)}
+#pv{display:none;position:fixed;inset:0;background:rgba(20,16,12,.96);z-index:105;padding:16px;overflow:auto}
+#pv.on{display:block}
+.pv-st{position:relative;width:fit-content;margin:0 auto}
+.pv-st img{display:block;max-width:100%;max-height:78vh;border-radius:12px}
+.pv-st svg{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.jbt{margin-top:8px;display:flex;flex-direction:column;gap:6px;align-items:center}
+.jbt div{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:center}
+.jbt span{color:#b7ab99;font-size:12px;width:20px}
+.jbt button{border:1px solid #6b5e4e;background:none;color:#ddd;border-radius:999px;padding:4px 10px;font-size:12px;font-family:inherit;cursor:pointer}
+.jbt button.on{background:#e62828;border-color:#e62828;color:#fff}
 #trk{display:none;position:fixed;inset:0;background:rgba(20,16,12,.92);z-index:100;padding:16px;overflow:auto}
 #trk.on{display:block}
 .trk-in{max-width:520px;margin:0 auto}
@@ -178,7 +188,13 @@ td input{width:100%;font-size:14px;padding:6px;border:1px solid var(--line);bord
 <div id="trk"><div class="trk-in">
   <div class="trk-st"><video id="trkV" playsinline muted controls loop crossorigin="anonymous"></video><canvas id="trkC"></canvas></div>
   <div id="trkS" class="hint" style="color:#ddd;text-align:center;margin-top:6px"></div>
+  <div id="jointBt" class="jbt"></div>
   <div style="text-align:center;margin-top:8px"><button class="btn" onclick="closeTrack()">閉じる</button></div>
+</div></div>
+<div id="pv"><div class="trk-in">
+  <div class="pv-st" id="pvSt"><img id="pvImg" crossorigin="anonymous"><svg id="pvSvg"></svg></div>
+  <div class="hint" style="color:#ddd;text-align:center;margin-top:6px">写真を押すと縦の線を引けます。線はつかんで左右に動かせます</div>
+  <div class="rec-bt"><button class="btn" onclick="pvUndo()">1本戻す</button><button class="btn" onclick="pvClear()">全部消す</button><button class="btn" onclick="pvClose()">閉じる</button></div>
 </div></div>
 
 <nav class="tabs">
@@ -469,13 +485,21 @@ async function getLandmarker(){
 // 体の主な線だけ(顔の細かい点は描かない)
 const LINES=[[11,12],[11,23],[12,24],[23,24],[11,13],[13,15],[12,14],[14,16],[23,25],[25,27],[27,29],[29,31],[27,31],[24,26],[26,28],[28,30],[30,32],[28,32],[7,11],[8,12]];
 const PTS=[7,8,11,12,13,14,15,16,23,24,25,26,27,28,29,30,31,32];
+// 選んだ関節は赤で大きく、その関節につながる線も赤くする(線つき再生の下のボタン)
+const JOINTS=[['肩',11,12],['肘',13,14],['手首',15,16],['股関節',23,24],['膝',25,26],['足首',27,28]];
+const HL=new Set(); let trkLast=-1;
+function renderJointBt(){
+  document.getElementById('jointBt').innerHTML=['左','右'].map((side,k)=>`<div><span>${side}</span>${JOINTS.map(j=>`<button class="${HL.has(j[k+1])?'on':''}" onclick="toggleJoint(${j[k+1]})">${j[0]}</button>`).join('')}</div>`).join('');
+}
+function toggleJoint(i){ HL.has(i)?HL.delete(i):HL.add(i); trkLast=-1; renderJointBt(); }
 function drawPose(ctx,W,H,p){
   if(!p) return;
   const lw=Math.max(3,W/180);
-  ctx.lineWidth=lw; ctx.strokeStyle='rgba(30,90,200,.95)'; ctx.lineCap='round';
-  LINES.forEach(([a,b])=>{ if(p[a].visibility<.4||p[b].visibility<.4) return; ctx.beginPath(); ctx.moveTo(p[a].x*W,p[a].y*H); ctx.lineTo(p[b].x*W,p[b].y*H); ctx.stroke(); });
-  ctx.fillStyle='#3fd25a';
-  PTS.forEach(i=>{ if(p[i].visibility<.4) return; ctx.beginPath(); ctx.arc(p[i].x*W,p[i].y*H,lw*1.2,0,7); ctx.fill(); });
+  ctx.lineCap='round';
+  LINES.forEach(([a,b])=>{ if(p[a].visibility<.4||p[b].visibility<.4) return; const h=HL.has(a)||HL.has(b);
+    ctx.lineWidth=h?lw*1.8:lw; ctx.strokeStyle=h?'rgba(230,40,40,.95)':'rgba(30,90,200,.95)';
+    ctx.beginPath(); ctx.moveTo(p[a].x*W,p[a].y*H); ctx.lineTo(p[b].x*W,p[b].y*H); ctx.stroke(); });
+  PTS.forEach(i=>{ if(p[i].visibility<.4) return; const h=HL.has(i); ctx.fillStyle=h?'#ff2a2a':'#3fd25a'; ctx.beginPath(); ctx.arc(p[i].x*W,p[i].y*H,lw*(h?2.4:1.2),0,7); ctx.fill(); });
 }
 async function openTrack(url){
   const m=document.getElementById('trk'), v=document.getElementById('trkV'), c=document.getElementById('trkC'), st=document.getElementById('trkS');
@@ -483,11 +507,11 @@ async function openTrack(url){
   let lm; try{ lm=await getLandmarker() }catch(e){ st.textContent='読み込みに失敗しました(ネット接続が必要です)'; return }
   st.textContent='';
   const ctx=c.getContext('2d');
-  let last=-1;
+  trkLast=-1; renderJointBt();
   const draw=()=>{
     if(!m.classList.contains('on')) return;
-    if(v.readyState>=2 && v.currentTime!==last){
-      last=v.currentTime;
+    if(v.readyState>=2 && v.currentTime!==trkLast){
+      trkLast=v.currentTime;
       c.width=v.videoWidth; c.height=v.videoHeight;
       const r=lm.detectForVideo(v, nextTs());
       ctx.clearRect(0,0,c.width,c.height);
@@ -800,10 +824,33 @@ async function showRowMedia(tr){
   const m=CUR[tr.dataset.key], td=tr.querySelector('td');
   td.querySelector('.rv')?.remove(); const ph=tr.querySelector('.ph'); if(ph) ph.innerHTML='';
   if(!m) return;
-  if(m.type==='image'){ const u=await viewUrl(m.path).catch(()=>null); if(u&&ph) ph.innerHTML=`<img src="${u}" style="width:80px;height:106px;object-fit:cover;border-radius:8px">`; return; }
+  if(m.type==='image'){ const u=await viewUrl(m.path).catch(()=>null); if(u&&ph) ph.innerHTML=`<img src="${u}" onclick="pvOpen('${m.path}')" style="width:80px;height:106px;object-fit:cover;border-radius:8px;cursor:zoom-in">`; return; }
   const rj=['squat','neck','slb'].includes(tr.dataset.kind)?`<button class="btn sm" onclick="rejudge(this)">判定し直す</button>`:'';
   td.insertAdjacentHTML('beforeend',`<div class="rv" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" onclick="openTrackPath('${m.path}')">線つきで見る</button>${rj}</div>`);
 }
+// ===== 姿勢の写真を大きく見る。押した所に縦の線(垂線)を引き、つかんで動かせる =====
+let pvLines=[], pvDrag=-1;
+async function pvOpen(path){
+  const u=await viewUrl(path); pvLines=[]; const img=document.getElementById('pvImg');
+  img.onload=pvDraw; img.src=u; document.getElementById('pv').classList.add('on');
+}
+function pvClose(){ document.getElementById('pv').classList.remove('on'); }
+function pvUndo(){ pvLines.pop(); pvDraw(); }
+function pvClear(){ pvLines=[]; pvDraw(); }
+function pvDraw(){
+  const svg=document.getElementById('pvSvg');
+  svg.innerHTML=pvLines.map(x=>`<line x1="${x*100}%" x2="${x*100}%" y1="0" y2="100%" stroke="#e62828" stroke-width="3"/><line x1="${x*100}%" x2="${x*100}%" y1="0" y2="100%" stroke="transparent" stroke-width="24"/>`).join('');
+}
+function pvX(e){ const r=document.getElementById('pvImg').getBoundingClientRect(); return Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)); }
+document.getElementById('pvSvg').addEventListener('pointerdown',e=>{
+  e.preventDefault(); const x=pvX(e), w=document.getElementById('pvImg').getBoundingClientRect().width;
+  pvDrag=pvLines.findIndex(v=>Math.abs(v-x)*w<14);           // 線の近くならその線をつかむ
+  if(pvDrag<0){ pvLines.push(x); pvDrag=pvLines.length-1; }  // 何もない所なら新しく引く
+  pvDraw();
+  const mv=ev=>{ pvLines[pvDrag]=pvX(ev); pvDraw(); };
+  const up=()=>{ document.removeEventListener('pointermove',mv); document.removeEventListener('pointerup',up); pvDrag=-1; };
+  document.addEventListener('pointermove',mv); document.addEventListener('pointerup',up);
+});
 async function openTrackPath(p){ openTrack(await viewUrl(p)); }
 // 姿勢は傾きを直し、大きさと足元をそろえ、基準線を重ねて並べる(posture.js)
 let cmpRaw=false;
