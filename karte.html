@@ -391,7 +391,7 @@ function reportCard(){
   return `<div class="card" id="reportCard" style="border-color:var(--gold)"><div class="cat-h"><span class="no"></span><h3>体験レポート</h3></div>
     <label class="f">目標(本人の言葉で)</label><textarea id="rpGoal"></textarea>
     <label class="f">今の体について(お客さまに伝えたいこと)</label><textarea id="rpNow"></textarea>
-    <label class="f">通い方</label><div style="display:grid;grid-template-columns:1fr 34%;gap:6px"><select class="f" id="rpPlan"><option value="">プランを選ぶ</option>${PLANS.map(p=>`<option>${p}</option>`).join('')}</select><input type="text" id="rpTerm" placeholder="期間(例 3ヶ月)"></div>
+    <label class="f">通い方(2つまで)</label>${[1,2].map(n=>`<div class="rpPlanRow" style="display:grid;grid-template-columns:2.5em 1fr 30%;gap:6px;align-items:center;margin-top:4px"><span class="hint" style="margin:0">案${n}</span><select class="f"><option value="">プランを選ぶ</option>${PLANS.map(p=>`<option>${p}</option>`).join('')}</select><input type="text" placeholder="期間(例 3ヶ月)"></div>`).join('')}
     <label class="f">ロードマップ(期間ごとに)</label><div id="rpPhases">${phaseRow()+phaseRow()+phaseRow()}</div>
     <button class="btn sm" style="margin-top:6px" onclick="document.getElementById('rpPhases').insertAdjacentHTML('beforeend',phaseRow())">＋ 期間を足す</button>
     <label class="f">オプション(すすめるもの)</label><div class="chips" id="rpOpts">${OPTIONS.map(o=>`<span class="chip">${o}</span>`).join('')}</div>
@@ -399,13 +399,15 @@ function reportCard(){
 }
 function collectReport(){
   if(!document.getElementById('reportCard')) return undefined;
-  return {goal:rpGoal.value, now:rpNow.value, plan:rpPlan.value, term:rpTerm.value,
+  return {goal:rpGoal.value, now:rpNow.value, plans:[...document.querySelectorAll('.rpPlanRow')].map(r=>[r.querySelector('select').value, r.querySelector('input').value]),
     phases:[...document.querySelectorAll('#rpPhases .rph')].map(r=>[...r.querySelectorAll('input,select')].map(x=>x.value)),
     opts:[...document.querySelectorAll('#rpOpts .chip.on')].map(c=>c.textContent)};
 }
 function restoreReport(r){
   if(!r||!document.getElementById('reportCard')) return;
-  rpGoal.value=r.goal||''; rpNow.value=r.now||''; rpPlan.value=r.plan||''; rpTerm.value=r.term||'';
+  rpGoal.value=r.goal||''; rpNow.value=r.now||'';
+  const pl=r.plans||(r.plan?[[r.plan,r.term||'']]:[]);
+  document.querySelectorAll('.rpPlanRow').forEach((row,i)=>{ row.querySelector('select').value=(pl[i]||[])[0]||''; row.querySelector('input').value=(pl[i]||[])[1]||''; });
   if(r.phases&&r.phases.length) document.getElementById('rpPhases').innerHTML=r.phases.map(phaseRow).join('');
   document.querySelectorAll('#rpOpts .chip').forEach(c=>c.classList.toggle('on',(r.opts||[]).includes(c.textContent)));
 }
@@ -466,7 +468,7 @@ ${phases||'(未記入)'}
 ${P?`(次回やることのメモ: ${P})`:''}
 
 # 通い方・料金
-- おすすめの通い方: ${r.plan||'(未選択)'}${r.term?` × ${r.term}`:''}
+${(r.plans||[]).filter(x=>x[0]).map((x,i)=>`- 通い方 案${i+1}: ${x[0]}${x[1]?` × ${x[1]}`:''}`).join('\n')||'- 通い方: (未選択)'}
 ${(r.opts||[]).length?'- あわせておすすめ: '+r.opts.join(' / '):''}
 - 入会金 10,000円(税込)は、体験から1週間以内のご入会で0円
 - 体験料 5,500円は、7日以内のご入会で初月会費から差し引き
