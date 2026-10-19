@@ -695,6 +695,7 @@ body[data-tod="evening"] .house-shade{opacity:.35;background:linear-gradient(180
 
 <div class="toast" id="toast"></div>
 
+<script src="posture.js"></script>
 <script>
 /* =========================================================
    GINZA TRAINING LAB お客様サポート v2 (Supabase共有版)
@@ -1668,7 +1669,22 @@ async function openCustModal(){
 /* ---------- render all ---------- */
 /* ---------- 姿勢とスクワット(トレーナーがカルテで撮った画像・動画。判定は出さない) ---------- */
 const MOVE_KEYS=[['姿勢|正面','姿勢 正面'],['姿勢|側面','姿勢 側面'],['SQ|ディープスクワット','スクワット']];
-let MOVES=[], moveKey=null, moveFor=null;
+const MOVE_MP='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+const MOVE_MODEL='https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
+let MOVES=[], moveKey=null, moveFor=null, moveImageLm=null, moveImageLmLoading=null, moveRenderSeq=0;
+async function getMoveImageLandmarker(){
+  if(moveImageLm) return moveImageLm;
+  if(moveImageLmLoading) return moveImageLmLoading;
+  moveImageLmLoading=(async()=>{
+    const M=await import(MOVE_MP+'/vision_bundle.mjs');
+    const fs=await M.FilesetResolver.forVisionTasks(MOVE_MP+'/wasm');
+    const mk=d=>M.PoseLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:MOVE_MODEL,delegate:d},runningMode:'IMAGE',numPoses:1});
+    try{ return await Promise.race([mk('GPU'),new Promise((_,ng)=>setTimeout(()=>ng(new Error('timeout')),20000))]); }
+    catch(e){ return mk('CPU'); }
+  })();
+  try{ moveImageLm=await moveImageLmLoading; return moveImageLm; }
+  finally{ moveImageLmLoading=null; }
+}
 async function mediaView(path){
   const headers={'apikey':SUPABASE_ANON_KEY,'Content-Type':'application/json'};
   if(SUPABASE_ANON_KEY.startsWith('eyJ')) headers['Authorization']='Bearer '+SUPABASE_ANON_KEY;
@@ -1676,6 +1692,7 @@ async function mediaView(path){
   if(!res.ok) return null; return (await res.json()).url;
 }
 async function loadMoves(){
+  const renderSeq=++moveRenderSeq;
   const c=cur(), card=document.getElementById('moveCard'); if(!c){ card.style.display='none'; return; }
   if(moveFor!==c.id){ moveFor=c.id; MOVES=[]; try{ MOVES=await rpc('gtl_karte_media_for',{...auth(), p_cid:c.id})||[]; }catch(e){} }
   const keys=MOVE_KEYS.filter(([k])=>MOVES.some(m=>m.key===k));
@@ -1692,7 +1709,22 @@ async function loadMoves(){
     <div style="font-size:12px;color:var(--gold-deep);margin-bottom:4px">${m.date.slice(5).replace('-','/')}${i===list.length-1&&list.length>1?'(初回)':''}</div>
     <div id="mv${i}" style="aspect-ratio:3/4;border-radius:12px;background:#2a2521;display:flex;align-items:center;justify-content:center;color:#d9c4a3;font-size:13px;overflow:hidden">${m.type==='video'?'▶ 線つきで見る':''}</div></a>`).join('');
   document.getElementById('moveCmp').innerHTML=cmpLink;
-  list.forEach(async(m,i)=>{ if(m.type!=='image') return; const u=await mediaView(m.path); const el=document.getElementById('mv'+i); if(u&&el) el.innerHTML=`<img src="${u}" style="width:100%;height:100%;object-fit:cover">`; });
+  list.forEach(async(m,i)=>{
+    if(m.type!=='image') return;
+    const u=await mediaView(m.path), el=document.getElementById('mv'+i);
+    if(!u||!el||renderSeq!==moveRenderSeq) return;
+    if(moveKey.startsWith('姿勢')){
+      el.textContent='補正しています…';
+      try{
+        const lm=await getMoveImageLandmarker(), r=await Posture.align(u,lm);
+        if(renderSeq!==moveRenderSeq||!document.getElementById('mv'+i)) return;
+        el.innerHTML=''; el.appendChild(r.canvas);
+        r.canvas.style.cssText='width:100%;height:100%;object-fit:cover;display:block';
+        return;
+      }catch(e){}
+    }
+    if(renderSeq===moveRenderSeq) el.innerHTML=`<img src="${u}" style="width:100%;height:100%;object-fit:cover">`;
+  });
 }
 
 /* ---------- 体重(寝る前・朝。入れたらすぐ保存。トレーナーのカルテに出る) ---------- */
