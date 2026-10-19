@@ -8,7 +8,7 @@
 :root{--gold:#b3905f;--gold-light:#d9c4a3;--ink-soft:#b7ab99}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#1c1814;color:#fff;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",-apple-system,sans-serif;min-height:100vh;padding:16px}
-.in{max-width:520px;margin:0 auto}
+.in{max-width:520px;margin:0 auto}.in.compare{max-width:960px}
 .st{position:relative}
 video,img{width:100%;display:block;border-radius:12px;background:#000}
 canvas{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
@@ -17,6 +17,8 @@ button{border:1px solid var(--gold);background:none;color:var(--gold-light);bord
 #row{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}
 .cc{flex:0 0 46%;text-align:center;font-size:12px;color:var(--ink-soft)}
 .cc canvas{position:static;width:100%;border-radius:10px;display:block;margin-top:4px}
+.cc video,.cc img{aspect-ratio:3/4;object-fit:cover;margin-top:4px}
+.val{min-height:18px;margin-top:4px;color:#fff}
 #msg{font-size:12px;color:var(--ink-soft);text-align:center;margin-top:8px}
 </style>
 </head>
@@ -44,14 +46,36 @@ async function viewUrl(p){
   const res=await fetch(SUPABASE_URL+'/functions/v1/gtl-karte-media',{method:'POST',headers:H,body:JSON.stringify({p_name:recall('gtl_name'),p_pass:recall('gtl_pass'),action:'view',path:p})});
   return res.ok ? (await res.json()).url : null;
 }
-// 姿勢を日付順に、傾きを直して大きさ・足元をそろえて並べる
+// 姿勢・スクワットを日付順に並べる。姿勢だけ傾きと大きさ・足元をそろえる。
 async function compare(){
   const res=await fetch(SUPABASE_URL+'/rest/v1/rpc/gtl_karte_media_for',{method:'POST',headers:H,body:JSON.stringify({p_name:recall('gtl_name'),p_pass:recall('gtl_pass'),p_cid:+q.get('c')})});
   const all=res.ok?await res.json():null;
   if(!all){ msg.textContent='開けませんでした。Private Lounge からもう一度開いてください'; return; }
   const list=all.filter(m=>m.key===KEY);
+  document.querySelector('.in').classList.add('compare');
   const st=document.getElementById('st'); st.innerHTML='<div id="row"></div>';
-  document.getElementById('row').innerHTML=list.map((m,i)=>`<div class="cc">${m.date.slice(5).replace('-','/')}${i===0&&list.length>1?'(初回)':''}<div id="pz${i}" style="aspect-ratio:450/800;background:#2a2521;border-radius:10px;margin-top:4px"></div><div id="pv${i}"></div></div>`).join('');
+  document.getElementById('row').innerHTML=list.map((m,i)=>`<div class="cc">${m.date.slice(5).replace('-','/')}${i===0&&list.length>1?'(初回)':''}<div id="pz${i}" style="aspect-ratio:450/800;background:#2a2521;border-radius:10px;margin-top:4px"></div><div id="pv${i}" class="val"></div></div>`).join('');
+  if(!list.length){ msg.textContent='比較できる撮影データがありません'; return; }
+
+  if(!KEY.startsWith('姿勢')){
+    msg.textContent='動画を読み込んでいます…';
+    for(let i=0;i<list.length;i++){
+      try{
+        const u=await viewUrl(list[i].path), box=document.getElementById('pz'+i);
+        if(!u||!box) continue;
+        const media=document.createElement(list[i].type==='image'?'img':'video');
+        media.src=u;
+        if(media.tagName==='VIDEO'){
+          media.controls=true; media.muted=true; media.playsInline=true; media.loop=true;
+        }
+        box.replaceWith(media);
+        document.getElementById('pv'+i).textContent=list[i].val||'';
+      }catch(e){}
+    }
+    msg.textContent='同じ場面で止めると、動きの変化を見比べられます';
+    return;
+  }
+
   msg.textContent='そろえています…';
   let lm;
   try{

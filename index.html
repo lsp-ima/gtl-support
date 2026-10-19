@@ -1220,8 +1220,10 @@ function renderKarte(){
   if(rs.length){
     recCard.style.display='block';
     renderKarteRecs();
-    loadMoves();
   } else recCard.style.display='none';
+
+  /* 撮影メディアは「今日の記録」の有無と無関係に表示する。 */
+  loadMoves();
 }
 function renderKarteRecs(){
   const c=cur(); if(!c) return;
@@ -1680,8 +1682,10 @@ async function loadMoves(){
   card.style.display=keys.length?'':'none'; if(!keys.length) return;
   if(!keys.some(([k])=>k===moveKey)) moveKey=keys[0][0];
   document.getElementById('segMove').innerHTML=keys.map(([k,l])=>`<button class="${k===moveKey?'on':''}" onclick="moveKey='${k}';loadMoves()">${l}</button>`).join('');
-  const cmpLink=moveKey.startsWith('姿勢')&&MOVES.filter(m=>m.key===moveKey).length>1
-    ? `<a class="btn gold small" style="display:inline-block;margin-top:10px;text-decoration:none" href="view.html?k=${encodeURIComponent(moveKey)}&c=${c.id}&t=${encodeURIComponent(MOVE_KEYS.find(([k])=>k===moveKey)[1])}">並べて見る(傾きと大きさをそろえる)</a>` : '';
+  const cmpCount=MOVES.filter(m=>m.key===moveKey).length;
+  const cmpLabel=moveKey.startsWith('姿勢')?'並べて見る(傾きと大きさをそろえる)':'並べて見る';
+  const cmpLink=cmpCount>1
+    ? `<a class="btn gold small" style="display:inline-block;margin-top:10px;text-decoration:none" href="view.html?k=${encodeURIComponent(moveKey)}&c=${c.id}&t=${encodeURIComponent(MOVE_KEYS.find(([k])=>k===moveKey)[1])}">${cmpLabel}</a>` : '';
   const list=MOVES.filter(m=>m.key===moveKey).slice().reverse(), box=document.getElementById('moveList');
   const title=MOVE_KEYS.find(([k])=>k===moveKey)[1];
   box.innerHTML=list.map((m,i)=>`<a href="view.html?p=${encodeURIComponent(m.path)}&t=${encodeURIComponent(title)}&d=${m.date}" style="flex:0 0 42%;text-decoration:none;color:inherit">
