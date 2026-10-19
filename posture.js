@@ -42,7 +42,9 @@
     return {x0:x0-mx, x1:x1+mx, y0:y0-my, y1:y1+my};
   }
 
-  async function align(url, lm){
+  async function align(url, lm, opt){
+    opt=opt||{};
+    const bodyPx=opt.bodyPx||BODY_PX, baseY=opt.baseY||BASE_Y;
     const im=await loadImg(url);
     const k=Math.min(1, 900/Math.max(im.naturalWidth, im.naturalHeight));
     const W=Math.round(im.naturalWidth*k), H=Math.round(im.naturalHeight*k);
@@ -65,15 +67,15 @@
     const ankle = side ? P(L?29:30) : mid(27,28);
     const heelY = Math.max(P(29).y, P(30).y, P(31).y, P(32).y);
     const ear = side ? P(pick[0]) : mid(7,8);
-    const s = BODY_PX / Math.max(40, heelY - ear.y);
-    const ox = OUT_W/2 - ankle.x*s, oy = BASE_Y - heelY*s;
+    const s = bodyPx / Math.max(40, heelY - ear.y);
+    const ox = OUT_W/2 - ankle.x*s, oy = baseY - heelY*s;
     g.drawImage(c1, ox, oy, W*s, H*s);
     const T=q=>({x:q.x*s+ox, y:q.y*s+oy});
 
     // 基準線(横向きは踵の後ろ、正面は両足の中心から真上)と床の線
     g.lineWidth=2; g.strokeStyle='rgba(185,92,80,.9)'; g.setLineDash([8,6]);
     g.beginPath(); g.moveTo(OUT_W/2,0); g.lineTo(OUT_W/2,OUT_H); g.stroke();
-    g.beginPath(); g.moveTo(0,BASE_Y); g.lineTo(OUT_W,BASE_Y); g.stroke(); g.setLineDash([]);
+    g.beginPath(); g.moveTo(0,baseY); g.lineTo(OUT_W,baseY); g.stroke(); g.setLineDash([]);
     if(side){
       // 横向きは踵の後ろからの線だけ。後頭骨の位置は自動推定が当てにならないので出さない(2026-10-10 本人指摘)
       return {canvas:out, tilt, found:true, side};

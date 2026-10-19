@@ -1671,7 +1671,12 @@ async function openCustModal(){
 const MOVE_KEYS=[['姿勢|正面','姿勢 正面'],['姿勢|側面','姿勢 側面'],['SQ|ディープスクワット','スクワット']];
 const MOVE_MP='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
 const MOVE_MODEL='https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
-let MOVES=[], moveKey=null, moveFor=null, moveImageLm=null, moveImageLmLoading=null, moveRenderSeq=0;
+let MOVES=[], moveKey=null, moveFor=null, moveImageLm=null, moveImageLmLoading=null, moveRenderSeq=0, moveDatePick={};
+function setMoveCompareDate(slot,date){
+  const c=cur(); if(!c||!moveKey) return;
+  const id=c.id+'|'+moveKey, picks=moveDatePick[id]||[];
+  picks[slot]=date; moveDatePick[id]=picks; loadMoves();
+}
 async function getMoveImageLandmarker(){
   if(moveImageLm) return moveImageLm;
   if(moveImageLmLoading) return moveImageLmLoading;
@@ -1703,20 +1708,36 @@ async function loadMoves(){
   const cmpLabel=moveKey.startsWith('姿勢')?'並べて見る(傾きと大きさをそろえる)':'並べて見る';
   const cmpLink=cmpCount>1
     ? `<a class="btn gold small" style="display:inline-block;margin-top:10px;text-decoration:none" href="view.html?k=${encodeURIComponent(moveKey)}&c=${c.id}&t=${encodeURIComponent(MOVE_KEYS.find(([k])=>k===moveKey)[1])}">${cmpLabel}</a>` : '';
-  const list=MOVES.filter(m=>m.key===moveKey).slice().reverse(), box=document.getElementById('moveList');
+  const all=MOVES.filter(m=>m.key===moveKey).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const pickId=c.id+'|'+moveKey;
+  if(!moveDatePick[pickId]) moveDatePick[pickId]=all.length>1?[all[all.length-1].date,all[0].date]:[all[0].date];
+  const picks=moveDatePick[pickId].map(d=>all.some(m=>m.date===d)?d:all[0].date).slice(0,Math.min(2,all.length));
+  moveDatePick[pickId]=picks;
+  const list=picks.map(d=>all.find(m=>m.date===d)), box=document.getElementById('moveList');
   const title=MOVE_KEYS.find(([k])=>k===moveKey)[1];
-  box.innerHTML=list.map((m,i)=>`<a href="view.html?p=${encodeURIComponent(m.path)}&t=${encodeURIComponent(title)}&d=${m.date}" style="flex:0 0 42%;text-decoration:none;color:inherit">
-    <div style="font-size:12px;color:var(--gold-deep);margin-bottom:4px">${m.date.slice(5).replace('-','/')}${i===list.length-1&&list.length>1?'(初回)':''}</div>
-    <div id="mv${i}" style="aspect-ratio:3/4;border-radius:12px;background:#2a2521;display:flex;align-items:center;justify-content:center;color:#d9c4a3;font-size:13px;overflow:hidden">${m.type==='video'?'▶ 線つきで見る':''}</div></a>`).join('');
+  box.innerHTML=list.map((m,i)=>`<div style="flex:1;min-width:0">
+    <select aria-label="比較する日付${i+1}" onchange="setMoveCompareDate(${i},this.value)" style="padding:7px 9px;font-size:12px;margin-bottom:6px">
+      ${all.slice().reverse().map(x=>`<option value="${x.date}"${x.date===m.date?' selected':''}>${x.date.replace(/-/g,'/')}</option>`).join('')}
+    </select>
+    <div id="mv${i}" style="aspect-ratio:9/16;border-radius:12px;background:#2a2521;display:flex;align-items:center;justify-content:center;color:#d9c4a3;font-size:13px;overflow:hidden">読み込み中…</div>
+    <a href="view.html?p=${encodeURIComponent(m.path)}&t=${encodeURIComponent(title)}&d=${m.date}" style="display:block;text-align:center;margin-top:5px;font-size:12px;color:var(--gold-deep)">大きく見る${m.type==='video'?'・線を表示':''}</a>
+  </div>`).join('');
   document.getElementById('moveCmp').innerHTML=cmpLink;
   list.forEach(async(m,i)=>{
-    if(m.type!=='image') return;
     const u=await mediaView(m.path), el=document.getElementById('mv'+i);
     if(!u||!el||renderSeq!==moveRenderSeq) return;
+    if(m.type==='video'){
+      const v=document.createElement('video');
+      v.src=u; v.controls=true; v.muted=true; v.playsInline=true; v.preload='metadata';
+      v.style.cssText='width:100%;height:100%;object-fit:contain;background:#000;display:block';
+      el.innerHTML=''; el.appendChild(v);
+      v.addEventListener('loadedmetadata',()=>{ if(v.duration>.1) v.currentTime=Math.min(.1,v.duration/10); },{once:true});
+      return;
+    }
     if(moveKey.startsWith('姿勢')){
       el.textContent='補正しています…';
       try{
-        const lm=await getMoveImageLandmarker(), r=await Posture.align(u,lm);
+        const lm=await getMoveImageLandmarker(), r=await Posture.align(u,lm,{bodyPx:500,baseY:690});
         if(renderSeq!==moveRenderSeq||!document.getElementById('mv'+i)) return;
         el.innerHTML=''; el.appendChild(r.canvas);
         r.canvas.style.cssText='width:100%;height:100%;object-fit:cover;display:block';
