@@ -313,9 +313,12 @@ function fillCustomers(){
 // 体験の人を名前だけで登録する。合言葉は自動で作り本人には渡さない(入会したら Private Lounge で変える)
 async function addTrial(){
   const name=(prompt('体験の人の名前')||'').trim(); if(!name) return;
+  // 来店経路は番号で選ぶ。空欄・キャンセルは「不明」(経路を聞き忘れても登録は止めない)
+  const via=(prompt('どこで知りましたか（番号）\n1 検索（Google・Yahoo）\n2 AI検索（ChatGPTなど）\n3 Instagram\n4 X\n5 紹介\n6 その他・不明')||'').trim();
+  const viaLabel={1:'検索',2:'AI検索',3:'Instagram',4:'X',5:'紹介',6:'その他'}[via]||'不明';
   const pass='t'+crypto.getRandomValues(new Uint32Array(3)).join('').slice(0,15);
   try{
-    const r=await rpc('gtl_customer_add',{...auth(),p_cname:name,p_note:'体験 '+today(),p_cpass:pass});
+    const r=await rpc('gtl_customer_add',{...auth(),p_cname:name,p_note:'体験 '+today()+' 経路:'+viaLabel,p_cpass:pass});
     if(r!=='ok') throw new Error(r||'rejected');
     const data=await rpc('gtl_bootstrap',auth());
     CUSTOMERS=data.customers||[];
