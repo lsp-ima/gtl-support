@@ -1,5 +1,5 @@
 // 姿勢写真をそろえて並べるための処理(カルテの比較と Private Lounge の再生ページで共用)
-// 1) 背景の縦の線(壁の角・ドア枠)から写真の傾きを測って水平に直す。体は使わない
+// 1) 背景の横の線(天井の出っ張り・壁と床の境目)から写真の傾きを測って水平に直す。無ければ縦の線。体は使わない
 // 2) 骨格からくるぶし・耳を取り、大きさと足元の位置をそろえて切り出す
 // 3) 横向き: 踵の後ろから真上の基準線を重ねる(頭の位置はトレーナーが目で見る)
 //    正面: 両足の中心から真上の線と、肩・骨盤の左右の傾き
@@ -14,11 +14,37 @@
     if(rot){ g.translate(w/2,h/2); g.rotate(rot); g.translate(-w/2,-h/2); }
     g.drawImage(src,0,0,w,h); return c;
   }
-  // 縦に近い強いエッジの向きを集計して、いちばん多い傾きを返す(度。右に傾いていれば正)
-  function estimateTilt(c, skip){
-    const w=c.width, h=c.height, d=c.getContext('2d').getImageData(0,0,w,h).data, gray=new Float32Array(w*h);
-    for(let i=0;i<w*h;i++) gray[i]=d[i*4]*.299+d[i*4+1]*.587+d[i*4+2]*.114;
-    const BINS=97, MAXDEG=12, hist=new Float32Array(BINS); let total=0;
+  // 写真の傾き(度。右に傾いていれば正)。横の線(奥の壁の天井の出っ張り・壁と床の境目・棚の天板)を先に使う。
+  // 縦の線(壁の角・柱)はカメラが少しでも上や下を向くと遠近で斜めに写るので、横の線が見つからない時だけ使う(2026-11-11 本人指摘)
+  function grayOf(c){
+    const w=c.width, h=c.height, d=c.getContext('2d').getImageData(0,0,w,h).data, g=new Float32Array(w*h);
+    for(let i=0;i<w*h;i++) g[i]=d[i*4]*.299+d[i*4+1]*.587+d[i*4+2]*.114;
+    return g;
+  }
+  // 横の線: 横向きのエッジを角度ごとに斜めに足し合わせ、長い1本の線にいちばん揃う角度を取る(短い模様より長い線が勝つ)
+  // 体の周りは除かない(除くと頭の上の天井の出っ張りが半分消え、床の目地に負ける。体には長い横線がないので邪魔にならない)
+  function horizTilt(c, gray){
+    const w=c.width, h=c.height, P=[];
+    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+      const i=y*w+x;
+      const gx=(gray[i-w+1]+2*gray[i+1]+gray[i+w+1])-(gray[i-w-1]+2*gray[i-1]+gray[i+w-1]);
+      const gy=(gray[i+w-1]+2*gray[i+w]+gray[i+w+1])-(gray[i-w-1]+2*gray[i-w]+gray[i-w+1]);
+      if(Math.abs(gy)<40 || Math.abs(gx)>Math.abs(gy)*.2) continue;
+      P.push(x,y,gy);
+    }
+    if(P.length<300) return {deg:0, ok:false};
+    const acc=new Float32Array(h*2+w*2); let best=-1, bestA=0, sum=0, n=0;
+    for(let a=-6;a<=6.001;a+=0.1){
+      const t=Math.tan(a*Math.PI/180); acc.fill(0); let s=0;
+      for(let j=0;j<P.length;j+=3) acc[Math.round(P[j+1]-P[j]*t)+w]+=P[j+2];
+      for(let k=0;k<acc.length;k++) s+=acc[k]*acc[k];
+      sum+=s; n++; if(s>best){ best=s; bestA=a; }
+    }
+    return {deg:Math.round(bestA*10)/10, ok: best > sum/n*1.5, by:'横'};
+  }
+  // 縦の線: 縦に近い強いエッジの向きを集計して、いちばん多い傾きを返す
+  function vertTilt(c, skip, gray){
+    const w=c.width, h=c.height, BINS=97, MAXDEG=12, hist=new Float32Array(BINS); let total=0;
     for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
       if(skip && x>skip.x0 && x<skip.x1 && y>skip.y0 && y<skip.y1) continue;
       const i=y*w+x;
@@ -33,7 +59,11 @@
     const sm=hist.map((v,i)=>(hist[i-1]||0)*.5+v+(hist[i+1]||0)*.5);
     let best=0; for(let i=1;i<BINS;i++) if(sm[i]>sm[best]) best=i;
     const mean=total/BINS, deg=best/(BINS-1)*2*MAXDEG-MAXDEG;
-    return {deg, ok: sm[best] > mean*3};
+    return {deg, ok: sm[best] > mean*3, by:'縦'};
+  }
+  function estimateTilt(c, skip){
+    const gray=grayOf(c), t=horizTilt(c, gray);
+    return t.ok ? t : vertTilt(c, skip, gray);
   }
   function bbox(p,w,h){
     const xs=[],ys=[]; p.forEach(q=>{ if(q.visibility>.3){ xs.push(q.x*w); ys.push(q.y*h); } });
