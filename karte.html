@@ -59,8 +59,15 @@ td input{width:100%;font-size:14px;padding:6px;border:1px solid var(--line);bord
 .items{margin:4px 0 8px 26px;font-size:12px;color:var(--ink-soft)}
 .items div{display:flex;gap:6px;align-items:center;padding:2px 0}
 .media{display:flex;flex-wrap:wrap;gap:6px}.media img,.media video{width:110px;height:146px;object-fit:cover;border-radius:10px;border:1px solid var(--line);background:#000}
-.cmp{display:flex;gap:10px;overflow-x:auto;margin-top:12px;padding-bottom:6px}
-.cc{flex:0 0 46%;display:flex;flex-direction:column;gap:4px;align-items:center}
+.cmp{margin-top:12px}
+.cmpPick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cmpPick select.f{font-size:14px;padding:6px 8px}
+.cmp2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.cmp2 .cc .d{display:none}
+.cmpAll{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:6px;margin-top:4px}
+.cmpAll .cc .d{font-size:11px}.cmpAll .cc .v{display:none}
+.cmpAll .cc.on .pz,.cmpAll .cc.on img,.cmpAll .cc.on video{outline:2px solid var(--gold-deep);outline-offset:1px}
+.cc{display:flex;flex-direction:column;gap:4px;align-items:center;min-width:0}
 .cc .d{font-size:12px;color:var(--gold-deep)}
 .cc img,.cc video{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;background:#000}
 .cc .v{font-size:12px;text-align:center}
@@ -922,7 +929,16 @@ function dragEnd(){
   document.removeEventListener('pointermove',dragMove); document.removeEventListener('pointerup',dragEnd); document.removeEventListener('pointercancel',dragEnd);
   if(dragEl){ const box=dragEl.parentNode; box.classList.remove('sorting'); dragEl.classList.remove('drag'); dragEl.scrollIntoView({block:'center'}); dragEl=null; queueSave(); }
 }
-function delEx(btn){ const e=btn.closest('.ex'); if([...e.querySelectorAll('input,select')].some(x=>x.value) && !confirm('この種目を消しますか')) return; e.remove(); queueSave(); }
+// 確認は confirm() を使わずボタンの2回押しにする(confirm はブラウザ側で黙って閉じられると何も起きなくなる)
+function delEx(btn){
+  const e=btn.closest('.ex');
+  if([...e.querySelectorAll('input,select')].some(x=>x.value) && !btn.dataset.armed){
+    btn.dataset.armed='1'; btn.textContent='もう一度で削除';
+    setTimeout(()=>{ if(btn.isConnected){ delete btn.dataset.armed; btn.textContent='削除'; } },3000);
+    return;
+  }
+  e.remove(); queueSave();
+}
 function addRow(b){const t=b.previousElementSibling;t.insertAdjacentHTML('beforeend','<tr><td><input></td><td><input></td><td><input></td><td><input></td><td><input></td><td><input></td></tr>')}
 
 function itemWrap(c,it){ return `<div class="it" data-ik="${esc(c.name+'|'+it.label)}">${itemHtml(it)}</div>`; }
@@ -998,40 +1014,66 @@ document.getElementById('pvSvg').addEventListener('pointerdown',e=>{
   document.addEventListener('pointermove',mv); document.addEventListener('pointerup',up);
 });
 async function openTrackPath(p){ openTrack(await viewUrl(p)); }
-// 姿勢は傾きを直し、大きさと足元をそろえ、基準線を重ねて並べる(posture.js)
-let cmpRaw=false;
-function rawToggle(on){ document.getElementById('cmpTool').innerHTML = on ? `<button class="btn sm" onclick="cmpRaw=!cmpRaw;renderCmp()">${cmpRaw?'そろえて見る':'元の写真'}</button>` : ''; return ''; }
-async function renderPostureCmp(items,k,urls){
-  const g=document.getElementById('cmpGrid');
-  g.innerHTML=rawToggle(true)+items.map((x,i)=>`<div class="cc"><div class="d">${esc(x.date)}</div><div class="pz" id="pz${i}">そろえています…</div><div class="v" id="pzv${i}"></div></div>`).join('');
-  let lm; try{ lm=await getImgLandmarker(); }catch(e){ cmpRaw=true; return renderCmp(); }
-  document.getElementById('cmpTool').insertAdjacentHTML('afterbegin','<span class="hint" style="float:left;margin:0">赤の点線=踵の後ろから真上</span>');
-  for(let i=0;i<items.length;i++){
-    const box=document.getElementById('pz'+i); if(!box) return;
-    try{
-      const r=await Posture.align(urls[i],lm);
-      box.innerHTML=''; box.appendChild(r.canvas);
-      document.getElementById('pzv'+i).textContent=(r.tilt?`傾き ${r.tilt>0?'右':'左'}に${Math.abs(r.tilt).toFixed(1)}°を補正`:'傾き補正なし')+(r.found?'':'・体が見つからず');
-    }catch(e){ box.textContent='開けませんでした'; }
-  }
-}
-// 比較: 項目を1つ選ぶと、その項目を日付順に横に並べる
+// 比較: 項目を1つ選び、日付を2つ選んで大きく並べる。下に全部の日付を小さく並べる(2026-11-11 本人指示)
+// 姿勢は傾きを直し、大きさと足元をそろえ、基準線を重ねる(posture.js)
+let cmpRaw=false, CMP=null, cmpGen=0;
+const cmpSel={}, alignCache=new Map();
+function rawToggle(on){ document.getElementById('cmpTool').innerHTML = on ? `<button class="btn sm" onclick="cmpRaw=!cmpRaw;drawCmp()">${cmpRaw?'そろえて見る':'元の写真'}</button>` : ''; return ''; }
 async function renderCmp(){
   try{ KARTES=await rpc('gtl_karte_list',{...auth(),p_cid:+cs.value})||KARTES; }catch(e){}
-  const list=KARTES.filter(x=>x.data&&x.data.media).map(x=>({date:x.date,media:x.data.media}));
+  const list=KARTES.filter(x=>x.data&&x.data.media).map(x=>({date:x.date,media:x.data.media})).sort((a,b)=>a.date<b.date?-1:1);
   const name=cs.options[cs.selectedIndex]?.text||'';
   document.getElementById('cmpTitle').textContent=name+' の比較';
   const keys=[...new Set(list.flatMap(x=>Object.keys(x.media)))];
   const ks=document.getElementById('cmpKey'), keep=ks.value;
   ks.innerHTML=keys.map(k=>`<option value="${esc(k)}">${esc(k.replace('|',' ・ '))}</option>`).join('');
   if(keys.includes(keep)) ks.value=keep;
-  const k=ks.value, g=document.getElementById('cmpGrid');
-  if(!k){ rawToggle(false); g.innerHTML='<p class="hint" style="margin-top:10px">まだ撮ったものがありません。評価ページで撮ると、ここに日付順で並びます。</p>'; return; }
+  const k=ks.value;
+  if(!k){ CMP=null; rawToggle(false); document.getElementById('cmpGrid').innerHTML='<p class="hint" style="margin-top:10px">まだ撮ったものがありません。評価ページで撮ると、ここに日付順で並びます。</p>'; return; }
   const items=list.filter(x=>x.media[k]);
   const urls=await Promise.all(items.map(x=>viewUrl(x.media[k].path).catch(()=>'')));
-  if(k.startsWith('姿勢')&&!cmpRaw){ renderPostureCmp(items,k,urls); return; }
-  g.innerHTML=rawToggle(k.startsWith('姿勢'))+items.map((x,i)=>{const m=x.media[k], u=urls[i];
-    return `<div class="cc"><div class="d">${esc(x.date)}</div>${m.type==='image'?`<img src="${u}">`:`<video src="${u}" muted playsinline controls crossorigin="anonymous"></video><button class="btn sm" onclick="openTrack('${u}')">線つきで見る</button>`}<div class="v">${esc(m.val||'')}</div></div>`}).join('');
+  CMP={k,items,urls,cid:cs.value};
+  drawCmp();
+}
+function cmpPick(side,v){ const s=cmpSel[CMP.cid+'|'+CMP.k]; s[side]=+v; drawCmp(); }
+async function drawCmp(){
+  if(!CMP) return;
+  const gen=++cmpGen;
+  const {k,items,urls}=CMP, n=items.length, sk=CMP.cid+'|'+k, g=document.getElementById('cmpGrid');
+  const sel=cmpSel[sk]=(cmpSel[sk]||[0,n-1]).map(i=>Math.min(n-1,Math.max(0,i)));
+  const posture=k.startsWith('姿勢')&&!cmpRaw;
+  rawToggle(k.startsWith('姿勢'));
+  const opts=side=>items.map((x,i)=>`<option value="${i}"${i===sel[side]?' selected':''}>${esc(x.date)}</option>`).join('');
+  const pair=n>1?sel:[sel[1]];
+  g.innerHTML=(n>1?`<div class="cmpPick"><select class="f" onchange="cmpPick(0,this.value)">${opts(0)}</select><select class="f" onchange="cmpPick(1,this.value)">${opts(1)}</select></div>`:'')
+    +`<div class="cmp2">${pair.map((i,j)=>cmpCell(i,'p'+j,true)).join('')}</div>`
+    +(n>2?`<label class="f" style="margin-top:14px">全部の日付(押すと右に出します)</label><div class="cmpAll">${items.map((x,i)=>cmpCell(i,'a'+i,false)).join('')}</div>`:'');
+  g.querySelectorAll('.cmpAll .cc').forEach((el,i)=>{ if(sel.includes(i)) el.classList.add('on'); el.onclick=()=>{ if(n>1) cmpPick(1,i); }; });
+  if(!posture) return;
+  let lm; try{ lm=await getImgLandmarker(); }catch(e){ cmpRaw=true; return drawCmp(); }
+  if(gen!==cmpGen) return;
+  document.getElementById('cmpTool').insertAdjacentHTML('afterbegin','<span class="hint" style="float:left;margin:0">赤の点線=踵の後ろから真上</span>');
+  const boxes=[...pair.map((i,j)=>['p'+j,i]), ...(n>2?items.map((x,i)=>['a'+i,i]):[])];
+  for(const [id,i] of boxes){
+    if(gen!==cmpGen) return;   // 選び直したら古い処理は捨てる
+    const box=document.getElementById('pz'+id); if(!box) continue;
+    try{
+      const path=items[i].media[k].path;
+      if(!alignCache.has(path)) alignCache.set(path, Posture.align(urls[i],lm));
+      const r=await alignCache.get(path); if(gen!==cmpGen) return;
+      const c=document.createElement('canvas');
+      c.width=r.canvas.width; c.height=r.canvas.height; c.getContext('2d').drawImage(r.canvas,0,0);
+      box.innerHTML=''; box.appendChild(c);
+      const v=document.getElementById('pzv'+id); if(v) v.textContent=(r.tilt?`傾き ${r.tilt>0?'右':'左'}に${Math.abs(r.tilt).toFixed(1)}°を補正`:'傾き補正なし')+(r.found?'':'・体が見つからず');
+    }catch(e){ alignCache.delete(items[i].media[k].path); box.textContent='開けませんでした'; }
+  }
+}
+function cmpCell(i,id,big){
+  const {k,items,urls}=CMP, x=items[i], m=x.media[k], u=urls[i];
+  const body = k.startsWith('姿勢')&&!cmpRaw ? `<div class="pz" id="pz${id}">${big?'そろえています…':''}</div><div class="v" id="pzv${id}"></div>`
+    : m.type==='image' ? `<img src="${u}" loading="lazy"><div class="v">${esc(m.val||'')}</div>`
+    : `<video src="${u}" muted playsinline ${big?'controls ':''}preload="metadata" crossorigin="anonymous"></video>${big?`<button class="btn sm" onclick="openTrack('${u}')">線つきで見る</button>`:''}<div class="v">${esc(m.val||'')}</div>`;
+  return `<div class="cc"><div class="d">${esc(x.date)}</div>${body}</div>`;
 }
 function renderCatEdit(){
   document.getElementById('catEdit').innerHTML = cats.map((c,i)=>`
